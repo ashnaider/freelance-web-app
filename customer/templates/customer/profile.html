@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block body %}
+    <form method="post">
+
+        <label for="first_name">First name</label>
+        <input name="first_name" id="first_name" value="{{ g.user['first_name'] }}" required>
+
+        <br>
+
+        <label for="last_name">Last name</label>
+        <input name="last_name" id="last_name" value="{{ g.user['last_name'] }}" required>
+
+        <br>
+
+        <label for="resume_link">Resume link</label>
+        <input name="resume_link" id="resume_link"
+               value="{{ '' if g.user['resume_link'] is none else g.user['resume_link'] }}">
+
+        <br>
+
+        <label for="specialization">Specialization</label>
+        <input name="specialization" id="specialization"
+               value="{{ '' if g.user['specialization'] is none else g.user['specialization'] }}">
+
+        <br>
+
+        <input type="submit" value="Update">
+
+        <br>
+    </form>
+    <br>
+{#    <button><a href="{{ url_for('customer.index') }}">Cancel</a></button>#}
+{% endblock %}
