@@ -1,4 +1,10 @@
 {% extends "customer/index.html" %}
+
+
+{% block header_block %}
+    <script src="{{ url_for('static', filename='handle_user_input.js') }}"></script>
+{% endblock %}
+
 {% block content %}
     <div class="content-section">
         <form method="POST" action="">
@@ -43,6 +49,12 @@
                     {% else %}
                         {{ form.price(class="form-control form-control-lg") }}
                     {% endif %}
+                    <script>
+                        const price_input = document.getElementById('price');
+                        price_input.oninput = function () {
+                            this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*?)\..*/g, '$1');
+                        }
+                    </script>
                 </div>
                 <div class="form-check">
                     <input class="form-check-input" type="checkbox" value="hourly_rate" id="hourly_rate">
