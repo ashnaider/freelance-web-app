@@ -6,7 +6,7 @@ from wtforms import StringField, PasswordField, SubmitField, \
 from wtforms.validators import DataRequired, Length, Email, EqualTo, ValidationError, Regexp
 # from flask_login import current_user
 # from flaskblog.models import User
-
+from datetime import date
 import re
 
 from db import get_db_cursor, close_cursor
@@ -101,20 +101,23 @@ class ResetPasswordForm(FlaskForm):
 class NewJobForm(FlaskForm):
     title = StringField('Title', validators=[DataRequired()])
     description = TextAreaField('Description', validators=[DataRequired()])
-    r = r'^[0-9]*(?:\.[0-9]{2})?$'
-    money = re.compile('|'.join([
-        r'^(\d*\.\d{1,2})$',  # e.g., $.50, .50, $1.50, $.5, .5
-        r'^(\d+\.?)$',  # e.g., $5.
-    ]))
-    price = DecimalField('Price', validators=[
-        DataRequired(),
-        # Regexp(money, message="Wrong type for money"),
-    ])
+    price = DecimalField('Price', validators=[DataRequired()])
 
-    deadline = DateField('Deadline', format='%Y-%m-%d', validators=[DataRequired()])
+    # deadline = DateField('Deadline', format='%Y-%m-%d', validators=[DataRequired()])
 
     submit = SubmitField('Publish')
 
-    # def validate_price(self, responce):
-    #     if float(responce.data) < 1000:
-    #         raise ValidationError('HUI?')
+    # def validate_deadline(self, deadline):
+    #     if deadline.data <= date.today():
+    #         raise ValidationError('Deadline should be later that today\'s date')
+
+    def validate_title(self, title):
+        cursor = get_db_cursor()
+        cursor.execute(
+            'SELECT * FROM new_job as nj WHERE nj.header_ = (%s)',
+            (title.data,)
+        )
+        record = cursor.fetchone()
+        close_cursor(cursor)
+        if record:
+            raise ValidationError('Job with this header already exist.')

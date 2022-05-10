@@ -10,27 +10,21 @@
 
 {% block user_buttons %}
     <a class="nav-item nav-link" href="{{ url_for('customer.create_job') }}">Add job</a>
-    <a class="nav-item nav-link" href="">My jobs</a>
+    <a class="nav-item nav-link" href="{{ url_for('customer.my_jobs') }}">My jobs</a>
     <a class="nav-item nav-link" href="">Edit Profile</a>
 {% endblock %}
 
-{% block content %}
+{% block user_greetings %}
     {% if g.user %}
-        User logged
-        <h2>Welcome back, {{ g.user['first_name'] }}</h2>
-
-        <br>
-
-{#        <a href="{{ url_for('freelancer.search') }}">Find a job</a>#}
-
-        <br>
-
-{#        <a href="{{ url_for('customer.edit') }}">Edit profile</a>#}
-        <br>
-{#        <a href="{{ url_for('customer.logout') }}">Log Out</a>#}
     {% else %}
         User NOT logged
         <a href="{{ url_for('auth.login') }}">Log In</a>
     {% endif %}
 
+{% endblock %}
+
+{% block content %}
+    {% if jobs_template %}
+        {{ jobs_template|safe }}
+    {% endif %}
 {% endblock %}

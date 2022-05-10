@@ -1,0 +1,31 @@
+{% if jobs %}
+    <h3>New jobs:</h3>
+    {% for job in jobs %}
+        <article class="media content-section">
+            <div class="media-body">
+                <div class="article-metadata">
+{#                    <a class="mr-2"#}
+{#                       href="{{ url_for('users.user_posts', username=job.author.username) }}">{{ job.author.username }}</a>#}
+                    <small class="text-muted">{{ job.posted.strftime('%Y-%m-%d') }}</small>
+                </div>
+{#                <h2><a class="article-title"#}
+{#                       href="{{ url_for('posts.post', post_id=job.id) }}">{{ job.title }}</a></h2>#}
+                <h2>{{ job.header_ }}</h2>
+                <p class="article-content">{{ job.description }}</p>
+            </div>
+        </article>
+    {% endfor %}
+{#    {% for page_num in posts.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}#}
+{#        {% if page_num %}#}
+{#            {% if posts.page == page_num %}#}
+{#                <a class="btn btn-info mb-4"#}
+{#                   href="{{ url_for('main.home', page=page_num) }}">{{ page_num }}</a>#}
+{#            {% else %}#}
+{#                <a class="btn btn-outline-info mb-4"#}
+{#                   href="{{ url_for('main.home', page=page_num) }}">{{ page_num }}</a>#}
+{#            {% endif %}#}
+{#        {% else %}#}
+{#            ...#}
+{#        {% endif %}#}
+{#    {% endfor %}#}
+{% endif %}

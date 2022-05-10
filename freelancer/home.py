@@ -14,6 +14,11 @@ freelancer = Blueprint(
 @freelancer.route('/home')
 def index():
     load_logged_in_user()
+    if not g.user_logged_in:
+        flash(f"Welcome back, {g.user['first_name'].capitalize()}!", 'success')
+        g.user_logged_in = True
+    else:
+        session.pop('_flashes', None)
     return render_template('freelancer/index.html')
 
 
@@ -34,6 +39,7 @@ def load_logged_in_user():
         g.user = None
     else:
         g.user = get_user(user_id)
+        g.user_logged_in = False
 
 
 @freelancer.route('/search', methods=['GET'])

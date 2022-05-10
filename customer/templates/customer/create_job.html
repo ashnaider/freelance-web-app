@@ -5,6 +5,8 @@
     <script src="{{ url_for('static', filename='handle_user_input.js') }}"></script>
 {% endblock %}
 
+{% block user_greetings %}{% endblock %}
+
 {% block content %}
     <div class="content-section">
         <form method="POST" action="">
@@ -55,28 +57,26 @@
                             this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*?)\..*/g, '$1');
                         }
                     </script>
-                </div>
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="hourly_rate" id="hourly_rate">
-                    <label class="form-check-label" for="hourly_rate">
+                    <input type="checkbox" name="hourly_rate" value="true" id="hourly_rate_chB">
+                    <label for="hourly_rate_chB">
                         Hourly rate
                     </label>
                     <br>
                     <br>
                 </div>
-                <div class="form-group">
-                    {{ form.deadline.label(class="form-control-label") }}
-                    {% if form.deadline.errors %}
-                        {{ form.deadline(class="form-control form-control-lg is-invalid") }}
-                        <div class="invalid-feedback">
-                            {% for error in form.deadline.errors %}
-                                <span>{{ error }}</span>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        {{ form.deadline(class="form-control form-control-lg") }}
-                    {% endif %}
-                </div>
+{#                <div class="form-group">#}
+{#                    {{ form.deadline.label(class="form-control-label") }}#}
+{#                    {% if form.deadline.errors %}#}
+{#                        {{ form.deadline(class="form-control form-control-lg is-invalid") }}#}
+{#                        <div class="invalid-feedback">#}
+{#                            {% for error in form.deadline.errors %}#}
+{#                                <span>{{ error }}</span>#}
+{#                            {% endfor %}#}
+{#                        </div>#}
+{#                    {% else %}#}
+{#                        {{ form.deadline(class="form-control form-control-lg") }}#}
+{#                    {% endif %}#}
+{#                </div>#}
 
             </fieldset>
             <div class="form-group">

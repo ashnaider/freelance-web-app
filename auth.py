@@ -8,6 +8,8 @@ from db import get_db_conn, get_db_cursor, close_cursor
 
 from forms import RegistrationForm, LoginForm
 
+from jobs import get_jobs
+
 auth = Blueprint('auth', __name__,
                  url_prefix='/',
                  template_folder='templates')
@@ -17,7 +19,9 @@ auth = Blueprint('auth', __name__,
 @auth.route('/home')
 @auth.route('/index')
 def home():
-    return render_template('index.html')
+    print("HUI HOME?")
+    jobs_template = get_jobs()
+    return render_template('index.html', jobs_template=jobs_template)
 
 
 @auth.route('/register', methods=['GET', 'POST'])
@@ -86,36 +90,6 @@ def login():
                 return redirect(url_for('customer.index'))
 
     return render_template('login.html', form=form)
-
-
-# @auth.route('/login', methods=['GET', 'POST'])
-# def login():
-#     if request.method == 'POST':
-#         email = request.form['email']
-#         password = request.form['password']
-#         cur = get_db_cursor()
-#         error = None
-#         cur.execute(
-#             'SELECT * FROM users WHERE email = %s', (email,)
-#         )
-#         user = cur.fetchone()
-#
-#         if user is None:
-#             error = 'Incorrect username.'
-#         elif not check_password_hash(user['passwd'], password):
-#             error = 'Incorrect password.'
-#
-#         if error is None:
-#             session.clear()
-#             session['user_id'] = user['id']
-#             if 'freelancer' == user['role']:
-#                 return redirect(url_for('freelancer.index'))
-#             elif 'customer' == user['role']:
-#                 return redirect(url_for('customer.index'))
-#
-#         flash(error)
-#     form = LoginForm()
-#     return render_template('login.html', form=form)
 
 
 @auth.route('/logout')

@@ -108,13 +108,12 @@ create table new_job (
 		references customer(id)
 		on delete restrict on update cascade,
 
-    posted timestamp not null check (posted >= CURRENT_TIMESTAMP),
-	deadline timestamp   not null check (deadline > CURRENT_TIMESTAMP),
+    posted timestamp not null check (posted >= CURRENT_TIMESTAMP) default CURRENT_TIMESTAMP,
+-- 	deadline timestamp   not null check (deadline > CURRENT_TIMESTAMP),
 	header_ varchar(250) not null,
 	description varchar(650) not null,
 	price money not null check (price > 0::money),
 	is_hourly_rate boolean default false,
--- 	is_done bool default false,
     status project_status default 'new',
     is_blocked boolean default false
 );
@@ -123,7 +122,7 @@ create table new_job (
 create table application (
 	id serial not null primary key,
 	date_time timestamp not null default CURRENT_TIMESTAMP,
-	deadline timestamp not null check (deadline > date_time),
+-- 	deadline timestamp not null check (deadline > date_time),
 	price money not null,
 	description varchar(450) not null,
 

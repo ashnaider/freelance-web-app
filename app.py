@@ -2,6 +2,12 @@ import os
 
 from flask import Flask, render_template
 
+from auth import auth
+from freelancer.home import freelancer
+from customer.home import customer
+
+from jobs import get_jobs
+
 
 def create_app(test_config=None):
     # create and configure the app
@@ -26,19 +32,15 @@ def create_app(test_config=None):
     except OSError:
         pass
 
-
-    @app.route('/index')
     @app.route('/')
+    @app.route('/index')
     def home():  # put application's code here
-        return render_template('index.html')
+        jobs_template = get_jobs()
+        return render_template('index.html', jobs_template=jobs_template)
 
-    from auth import auth
+
     app.register_blueprint(auth)
-
-    from freelancer.home import freelancer
     app.register_blueprint(freelancer)
-
-    from customer.home import customer
     app.register_blueprint(customer)
 
 
