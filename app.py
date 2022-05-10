@@ -5,8 +5,7 @@ from flask import Flask, render_template
 from auth import auth
 from freelancer.home import freelancer
 from customer.home import customer
-
-from jobs import get_jobs
+from jobs import jobs, get_jobs_template
 
 
 def create_app(test_config=None):
@@ -35,13 +34,14 @@ def create_app(test_config=None):
     @app.route('/')
     @app.route('/index')
     def home():  # put application's code here
-        jobs_template = get_jobs()
+        jobs_template = get_jobs_template()
         return render_template('index.html', jobs_template=jobs_template)
 
 
     app.register_blueprint(auth)
     app.register_blueprint(freelancer)
     app.register_blueprint(customer)
+    app.register_blueprint(jobs)
 
 
     # from freelancer.auth import freelancer_auth

@@ -14,18 +14,17 @@ freelancer = Blueprint(
 @freelancer.route('/home')
 def index():
     load_logged_in_user()
-    if not g.user_logged_in:
+    if g.user:
         flash(f"Welcome back, {g.user['first_name'].capitalize()}!", 'success')
-        g.user_logged_in = True
-    else:
-        session.pop('_flashes', None)
-    return render_template('freelancer/index.html')
+        return render_template('freelancer/index.html')
+    return redirect(url_for('auth.login'))
 
 
-def get_user(user_id):
+def get_freelancer(user_id):
     cur = get_db_cursor()
     cur.execute(
-        'SELECT * FROM freelancer WHERE user_id = %s', (user_id,)
+        'SELECT * FROM freelancer AS f INNER JOIN users AS u ON f.user_id = u.id WHERE user_id = %s',
+        (user_id,)
     )
     user = cur.fetchone()
     close_cursor(cur)
@@ -38,8 +37,7 @@ def load_logged_in_user():
     if user_id is None:
         g.user = None
     else:
-        g.user = get_user(user_id)
-        g.user_logged_in = False
+        g.user = get_freelancer(user_id)
 
 
 @freelancer.route('/search', methods=['GET'])
@@ -105,14 +103,9 @@ def edit():
 
         close_cursor(cur)
 
-        g.user = get_user(g.user['id'])
+        g.user = get_freelancer(g.user['id'])
 
     if g.user is None:
         return '<p>Nothing to edit, log in first</p>'
     return render_template('freelancer/profile.html')
 
-
-@freelancer.route('/logout')
-def logout():
-    session.clear()
-    return redirect('index.html')

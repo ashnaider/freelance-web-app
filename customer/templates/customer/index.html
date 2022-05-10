@@ -8,11 +8,11 @@
     <a class="nav-item nav-link" href="{{ url_for('customer.index') }}">Home</a>
 {% endblock %}
 
-{% block user_buttons %}
-    <a class="nav-item nav-link" href="{{ url_for('customer.create_job') }}">Add job</a>
-    <a class="nav-item nav-link" href="{{ url_for('customer.my_jobs') }}">My jobs</a>
-    <a class="nav-item nav-link" href="">Edit Profile</a>
-{% endblock %}
+{#{% block user_buttons %}#}
+{#    <a class="nav-item nav-link" href="{{ url_for('customer.create_job') }}">Add job</a>#}
+{#    <a class="nav-item nav-link" href="{{ url_for('customer.my_jobs') }}">My jobs</a>#}
+{#    <a class="nav-item nav-link" href="">Edit Profile</a>#}
+{#{% endblock %}#}
 
 {% block user_greetings %}
     {% if g.user %}

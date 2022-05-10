@@ -8,7 +8,7 @@ from db import get_db_conn, get_db_cursor, close_cursor
 
 from forms import RegistrationForm, LoginForm
 
-from jobs import get_jobs
+from jobs import get_jobs_template
 
 auth = Blueprint('auth', __name__,
                  url_prefix='/',
@@ -20,7 +20,7 @@ auth = Blueprint('auth', __name__,
 @auth.route('/index')
 def home():
     print("HUI HOME?")
-    jobs_template = get_jobs()
+    jobs_template = get_jobs_template()
     return render_template('index.html', jobs_template=jobs_template)
 
 

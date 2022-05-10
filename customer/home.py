@@ -4,7 +4,7 @@ from datetime import date
 
 from forms import NewJobForm
 
-from jobs import get_jobs
+from jobs import get_jobs_template
 from .my_jobs import get_customers_jobs
 
 customer = Blueprint(
@@ -17,15 +17,19 @@ customer = Blueprint(
 @customer.route('/index')
 @customer.route('/home')
 def index():
-    jobs_template = get_jobs()
-    flash(f"Welcome back, {g.user['first_name'].capitalize()}!", 'success')
-    return render_template('customer/index.html', jobs_template=jobs_template)
+    load_logged_in_user()
+    jobs_template = get_jobs_template()
+    if g.user:
+        flash(f"Welcome back, {g.user['first_name'].capitalize()}!", 'success')
+        return render_template('customer/index.html', jobs_template=jobs_template)
+    return redirect(url_for('auth.login'))
 
 
-def get_user(user_id):
+def get_customer(user_id):
     cur = get_db_cursor()
     cur.execute(
-        'SELECT * FROM customer WHERE user_id = %s', (user_id,)
+        'SELECT * FROM customer AS c INNER JOIN users AS u ON c.user_id = u.id WHERE user_id = %s',
+        (user_id,)
     )
     user = cur.fetchone()
     close_cursor(cur)
@@ -38,8 +42,7 @@ def load_logged_in_user():
     if user_id is None:
         g.user = None
     else:
-        g.user = get_user(user_id)
-        g.user_logged_in = False
+        g.user = get_customer(user_id)
 
 
 @customer.route('/create_job', methods=['GET', 'POST'])
@@ -83,9 +86,3 @@ def my_jobs():
         jobs_template = get_customers_jobs(g.user['id'])
         return render_template('customer/index.html', jobs_template=jobs_template)
     return redirect(url_for('auth.login'))
-
-
-@customer.route('/logout')
-def logout():
-    session.clear()
-    return redirect('index.html')
