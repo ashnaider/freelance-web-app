@@ -35,6 +35,20 @@ def get_jobs_template():
     return render_template('jobs.html', jobs=jobs)
 
 
+def count_job_applications(job_id):
+    cursor = get_db_cursor()
+    cursor.execute(
+        "SELECT COUNT(*) FROM application WHERE job_id = (%s);",
+        (job_id,)
+    )
+    job = cursor.fetchone()
+    close_cursor(cursor)
+
+    if job:
+        return job[0]
+    return 0
+
+
 @jobs.route('/<int:job_id>')
 def get_job(job_id):
     cursor = get_db_cursor()
@@ -43,8 +57,14 @@ def get_job(job_id):
         (job_id,)
     )
     job = cursor.fetchone()
-    job['price'] = psql_money_to_dec(job['price'])
     close_cursor(cursor)
 
-    return render_template('concrete_job.html', job=job)
+    job_compliment = {}
+
+    if job:
+        job_compliment['job_apps'] = count_job_applications(job['id'])
+        job['price'] = psql_money_to_dec(job['price'])
+        return render_template('concrete_job.html', job=job, job_compliment=job_compliment)
+
+    return redirect(url_for('jobs.get_jobs'))
 
