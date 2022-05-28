@@ -97,33 +97,50 @@ def edit_profile():
     return redirect(url_for('auth.login'))
 
 
+def is_application_exist(job_id, fr_id):
+    cur = get_db_cursor()
+    cur.execute(
+        """
+        SELECT * FROM is_application_exist(%s, %s);
+        """,
+        (job_id, fr_id)
+    )
+    exist = cur.fetchone()['is_application_exist']
+    close_cursor(cur)
+    return exist
+
+
 @freelancer.route('/apply_job/<int:job_id>', methods=['GET', 'POST'])
 def apply_job(job_id):
     load_logged_in_user()
     if g.user:
         form = JobApplication()
+        fr_id = g.user['freelancer_id']
+
+        job_template = get_job_template(job_id)
+
+        if is_application_exist(job_id, fr_id):
+            return render_template('freelancer/job_application.html', job_template=job_template, form=None)
 
         if form.validate_on_submit():
             description = form.description.data
-            price = form.price.data
+            price = float(form.price.data)
 
             try:
                 cur = get_db_cursor()
                 cur.execute(
                     """
-                    UPDATE freelancer SET
-                    first_name = %s, last_name = %s, resume_link = %s, specialization = %s
-                    WHERE id = %s;
+                    INSERT INTO application (price, description, freelancer_id, job_id)
+                    VALUES (%s, %s, %s, %s);
                     """,
-                    (first_name, last_name, resume_link, specialization, g.user['freelancer_id'])
+                    (price, description, fr_id, job_id)
                 )
                 close_cursor(cur)
             except Exception as e:
                 flash(str(e), 'danger')
             else:
-                load_logged_in_user()
+                form = None
 
-        job_template = get_job_template(job_id)
         return render_template('freelancer/job_application.html', job_template=job_template, form=form)
 
     return redirect(url_for('freelancer.home'))

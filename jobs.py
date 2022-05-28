@@ -22,15 +22,14 @@ def get_jobs():
 
 
 def get_jobs_template():
-    cursor = get_db_cursor()
-    cursor.execute(
-        "SELECT new_job.id as job_id, c.id as customer_id, c.first_name, c.is_blocked,"
-        "c.last_name, new_job.posted, new_job.description, new_job.price, new_job.status, "
-        "new_job.is_blocked, new_job.is_hourly_rate, new_job.header_ "
-        "FROM new_job INNER JOIN customer c on new_job.customer_id = c.id"
+    cur = get_db_cursor()
+    cur.execute(
+        """
+        SELECT * FROM get_newest_jobs();
+        """
     )
-    jobs = cursor.fetchall()
-    close_cursor(cursor)
+    jobs = cur.fetchall()
+    close_cursor(cur)
 
     for job in jobs:
         job['price'] = psql_money_to_dec(job['price'])
@@ -41,33 +40,31 @@ def get_jobs_template():
 def count_job_applications(job_id):
     cursor = get_db_cursor()
     cursor.execute(
-        "SELECT COUNT(*) FROM application WHERE job_id = (%s);",
+        """
+        SELECT * FROM count_job_applications(%s);
+        """,
         (job_id,)
     )
     job = cursor.fetchone()
     close_cursor(cursor)
 
-    if job:
-        return job[0]
-    return 0
+    return job[0]
 
 
 def get_job_template(job_id):
     cursor = get_db_cursor()
     cursor.execute(
-        "SELECT * FROM new_job INNER JOIN customer c on new_job.customer_id = c.id WHERE new_job.id = (%s)",
+        """
+        SELECT * FROM get_active_jobs() WHERE job_id = %s;
+        """,
         (job_id,)
     )
     job = cursor.fetchone()
     close_cursor(cursor)
 
-    job_compliment = {}
-
     if job:
-        job_compliment['job_apps'] = count_job_applications(job['id'])
-        job['price'] = psql_money_to_dec(job['price'])
-
-        return render_template('job_template.html', job=job, job_compliment=job_compliment)
+        print(job['applications_count'])
+        return render_template('job_template.html', job=job)
 
     return None
 
