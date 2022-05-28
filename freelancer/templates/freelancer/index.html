@@ -4,8 +4,9 @@
     <title>Freelancer</title>
 {% endblock %}
 
-{% block home_btn %}
-    <a class="nav-item nav-link" href="{{ url_for('freelancer.index') }}">Home</a>
+{% block left_menu %}
+    <a class="nav-item nav-link" href="{{ url_for('freelancer.index') }}">Jobs</a>
+    <a class="nav-item nav-link" href="{{ url_for('freelancer.get_applied_jobs') }}">Applications</a>
 {% endblock %}
 
 

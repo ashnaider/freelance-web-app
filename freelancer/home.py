@@ -4,6 +4,8 @@ from db import get_db_cursor, close_cursor
 from forms import FreelancerProfileForm, JobApplication
 from jobs import get_jobs_template, get_job_template
 
+from utils import *
+
 freelancer = Blueprint(
     'freelancer',
     __name__,
@@ -110,6 +112,21 @@ def is_application_exist(job_id, fr_id):
     return exist
 
 
+def get_application(job_id, fr_id):
+    cur = get_db_cursor()
+    cur.execute(
+        """
+        SELECT * FROM application WHERE job_id = %s and freelancer_id = %s ;
+        """,
+        (job_id, fr_id)
+    )
+    application = cur.fetchone()
+    if application:
+        application['price'] = psql_money_to_dec(application['price'])
+    close_cursor(cur)
+    return application
+
+
 @freelancer.route('/apply_job/<int:job_id>', methods=['GET', 'POST'])
 def apply_job(job_id):
     load_logged_in_user()
@@ -118,29 +135,74 @@ def apply_job(job_id):
         fr_id = g.user['freelancer_id']
 
         job_template = get_job_template(job_id)
+        application = get_application(job_id, fr_id)
 
-        if is_application_exist(job_id, fr_id):
-            return render_template('freelancer/job_application.html', job_template=job_template, form=None)
+        if request.method == 'POST':
+            if request.form['submit'] == 'Cancel application' and application:
+                try:
+                    cur = get_db_cursor()
+                    cur.execute(
+                        """
+                        DELETE FROM application WHERE job_id = %s and freelancer_id = %s
+                        """,
+                        (job_id, fr_id)
+                    )
+                    close_cursor(cur)
+                except Exception as e:
+                    flash(str(e), 'danger')
 
-        if form.validate_on_submit():
-            description = form.description.data
-            price = float(form.price.data)
+            application = None
 
-            try:
-                cur = get_db_cursor()
-                cur.execute(
-                    """
-                    INSERT INTO application (price, description, freelancer_id, job_id)
-                    VALUES (%s, %s, %s, %s);
-                    """,
-                    (price, description, fr_id, job_id)
-                )
-                close_cursor(cur)
-            except Exception as e:
-                flash(str(e), 'danger')
-            else:
-                form = None
+            if request.form['submit'] == 'Apply':
+                description = form.description.data
+                price = float(form.price.data)
 
-        return render_template('freelancer/job_application.html', job_template=job_template, form=form)
+                try:
+                    cur = get_db_cursor()
+                    cur.execute(
+                        """
+                        INSERT INTO application (price, description, freelancer_id, job_id)
+                        VALUES (%s, %s, %s, %s);
+                        """,
+                        (price, description, fr_id, job_id)
+                    )
+                    close_cursor(cur)
+                except Exception as e:
+                    flash(str(e), 'danger')
+                else:
+                    application = get_application(job_id, fr_id)
+
+
+        return render_template('freelancer/job_application.html',
+                               job_template=job_template,
+                               form=form,
+                               application=application)
 
     return redirect(url_for('freelancer.home'))
+
+
+def get_applied_jobs_template(fr_id):
+    cur = get_db_cursor()
+    cur.execute(
+        """
+        SELECT * FROM get_applied_jobs(%s);
+        """,
+        (fr_id,)
+    )
+    jobs = cur.fetchall()
+    close_cursor(cur)
+
+    for job in jobs:
+        job['price'] = psql_money_to_dec(job['price'])
+
+    return render_template('jobs.html', jobs=jobs)
+
+
+@freelancer.route('/applications', methods=['GET'])
+def get_applied_jobs():
+    load_logged_in_user()
+    if g.user:
+        jobs_template = get_applied_jobs_template(g.user['freelancer_id'])
+        return render_template('freelancer/index.html', jobs_template=jobs_template)
+    return redirect(url_for('auth.login'))
+

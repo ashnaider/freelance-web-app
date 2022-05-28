@@ -21,7 +21,14 @@
                                             {% endfor %}
                                         </div>
                                     {% else %}
-                                        {{ form.description(class="form-control form-control-lg") }}
+                                        {% if application %}
+                                            <input class="form-control form-control-lg"
+                                                   type="text"
+                                                   value="{{ application.description }}"
+                                                   readonly="readonly">
+                                        {% else %}
+                                            {{ form.description(class="form-control form-control-lg") }}
+                                        {% endif %}
                                     {% endif %}
                                 </div>
                                 <div class="form-group">
@@ -34,7 +41,14 @@
                                             {% endfor %}
                                         </div>
                                     {% else %}
-                                        {{ form.price(class="form-control form-control-lg") }}
+                                        {% if application %}
+                                            <input class="form-control form-control-lg"
+                                                   type="text"
+                                                   value="{{ application.price }}"
+                                                   readonly="readonly">
+                                        {% else %}
+                                            {{ form.price(class="form-control form-control-lg") }}
+                                        {% endif %}
                                     {% endif %}
                                     <script>
                                         const price_input = document.getElementById('price');
@@ -44,12 +58,27 @@
                                     </script>
                                 </div>
                             </fieldset>
-                            <div class="form-group">
-                                {{ form.submit(class="btn btn-outline-info") }}
-                            </div>
+                            {% if application %}
+                                <div class="form-group">
+                                    <input type="submit"
+                                           class="btn btn-outline-danger"
+                                           value="Cancel application"
+                                           name="submit">
+{#                                {{ form.cancel(class="btn btn-outline-danger") }}#}
+                                </div>
+                            {% else %}
+                                <div class="form-group">
+{#                                    {{ form.submit(class="btn btn-outline-info") }}#}
+                                <input type="submit"
+                                       class="btn btn-outline-info"
+                                           value="Apply"
+                                           name="submit">
+                                </div>
+                            {% endif %}
+
                         </form>
                     {% else %}
-                        <h3>You already applied to this job!</h3>
+                        <h3>You already applied for this job!</h3>
                     {% endif %}
                 {% endif %}
             {% endif %}

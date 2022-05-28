@@ -63,7 +63,7 @@ def get_job_template(job_id):
     close_cursor(cursor)
 
     if job:
-        print(job['applications_count'])
+        job['price'] = psql_money_to_dec(job['price'])
         return render_template('job_template.html', job=job)
 
     return None

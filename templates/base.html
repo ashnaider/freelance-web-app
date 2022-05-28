@@ -27,8 +27,8 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarToggle">
                 <div class="navbar-nav mr-auto">
-                    {% block home_btn %}
-                        <a class="nav-item nav-link" href="{{ url_for('auth.home') }}">Home</a>
+                    {% block left_menu %}
+                        <a class="nav-item nav-link" href="{{ url_for('auth.home') }}">Jobs</a>
                     {% endblock %}
                 </div>
                 <!-- Navbar Right Side -->
@@ -41,7 +41,8 @@
                             <a class="nav-item nav-link" href="{{ url_for('auth.logout') }}">Logout</a>
                         {% endif %}
                         {% if g.user['role'] == 'freelancer' %}
-                            <a class="nav-item nav-link" href="{{ url_for('freelancer.edit_profile') }}">Edit Profile</a>
+                            <a class="nav-item nav-link" href="{{ url_for('freelancer.edit_profile') }}">Edit
+                                Profile</a>
                             <a class="nav-item nav-link" href="{{ url_for('auth.logout') }}">Logout</a>
                         {% endif %}
                     {% else %}

@@ -1,4 +1,13 @@
 DROP FUNCTION IF EXISTS IS_APPLICATION_EXIST(job_id_p integer, fr_id_p integer);
+DROP FUNCTION IF EXISTS COUNT_JOB_APPLICATIONS(job_id_p integer);
+DROP FUNCTION IF EXISTS GET_ACTIVE_JOBS();
+DROP FUNCTION IF EXISTS GET_NEWEST_JOBS(newest boolean);
+DROP FUNCTION IF EXISTS GET_MOST_EXPENSIVE_JOBS(most_expensive boolean);
+DROP FUNCTION IF EXISTS GET_MOST_POPULAR_JOBS(most_popular boolean);
+DROP FUNCTION IF EXISTS GET_APPLIED_JOBS(fr_id integer);
+
+DROP TYPE IF EXISTS JOB_FULL_INFO;
+
 
 CREATE OR REPLACE FUNCTION IS_APPLICATION_EXIST(job_id_p integer, fr_id_p integer) RETURNS boolean
 AS $$
@@ -18,7 +27,6 @@ AS $$
 $$ LANGUAGE plpgsql;
 
 
-DROP FUNCTION IF EXISTS COUNT_JOB_APPLICATIONS(job_id_p integer);
 
 CREATE OR REPLACE FUNCTION COUNT_JOB_APPLICATIONS(job_id_p integer) RETURNS integer
 AS $$
@@ -31,7 +39,6 @@ AS $$
 $$ LANGUAGE plpgsql;
 
 
-DROP TYPE IF EXISTS JOB_FULL_INFO;
 
 CREATE TYPE JOB_FULL_INFO
 AS (job_id integer, email email_domain, first_name name_domain, last_name name_domain, organisation_name varchar(150),
@@ -39,7 +46,6 @@ AS (job_id integer, email email_domain, first_name name_domain, last_name name_d
        applications_count integer);
 
 
-DROP FUNCTION IF EXISTS GET_ACTIVE_JOBS();
 
 CREATE OR REPLACE FUNCTION GET_ACTIVE_JOBS() RETURNS SETOF JOB_FULL_INFO
 AS $$
@@ -56,7 +62,6 @@ $$ LANGUAGE plpgsql;
 
 
 
-DROP FUNCTION IF EXISTS GET_NEWEST_JOBS(newest boolean);
 
 CREATE OR REPLACE FUNCTION GET_NEWEST_JOBS(newest boolean default true) RETURNS SETOF JOB_FULL_INFO
 AS $$
@@ -72,7 +77,6 @@ AS $$
 $$ LANGUAGE plpgsql;
 
 
-DROP FUNCTION IF EXISTS GET_MOST_EXPENSIVE_JOBS(most_expensive boolean);
 
 CREATE OR REPLACE FUNCTION GET_MOST_EXPENSIVE_JOBS(most_expensive boolean default true) RETURNS SETOF JOB_FULL_INFO
 AS $$
@@ -88,7 +92,6 @@ AS $$
 $$ LANGUAGE plpgsql;
 
 
-DROP FUNCTION IF EXISTS GET_MOST_POPULAR_JOBS(most_popular boolean);
 
 CREATE OR REPLACE FUNCTION GET_MOST_POPULAR_JOBS(most_popular boolean default true) RETURNS SETOF JOB_FULL_INFO
 AS $$
@@ -100,5 +103,19 @@ AS $$
             return query
             select * from GET_ACTIVE_JOBS() as j order by j.applications_count asc ;
         end if;
+    END;
+$$ LANGUAGE plpgsql;
+
+
+
+CREATE OR REPLACE FUNCTION GET_APPLIED_JOBS(fr_id integer) RETURNS SETOF JOB_FULL_INFO
+AS $$
+    BEGIN
+        return query
+        select j.job_id, email, first_name, last_name, organisation_name,
+        posted, job_header, j.description, j.price, is_hourly_rate,
+        applications_count
+        from GET_ACTIVE_JOBS() as j inner join application as a on a.job_id = j.job_id
+        where a.freelancer_id = fr_id;
     END;
 $$ LANGUAGE plpgsql;

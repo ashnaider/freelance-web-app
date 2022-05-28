@@ -150,4 +150,5 @@ class JobApplication(FlaskForm):
     price = DecimalField('Your price', validators=[DataRequired()])
 
     submit = SubmitField('Apply')
+    cancel = SubmitField('Cancel application')
 
