@@ -6,14 +6,27 @@
             <div class="container">
                 <div class="row">
                     <div class="col-10 float-left">
-                        <h4><a class="article-title row"
-                               href="{{ url_for('jobs.get_job', job_id=job.id) }}">{{ job.header_ }}</a></h4>
+                        <h4>
+                            <a class="article-title row"
+                                {% if g.user %}
+                                     {% if g.user.role == 'freelancer' %}
+                                          href="{{ url_for('freelancer.apply_job', job_id=job.job_id) }}"
+                                     {% elif g.user.role == 'customer' %}
+                                          href="{{ url_for('jobs.get_job', job_id=job.job_id) }}"
+                                     {% endif %}
+                                {% else %}
+                                     href="{{ url_for('jobs.get_job', job_id=job.job_id) }}"
+                                {% endif %}
+                            >
+                            {{ job.header_ }}
+                            </a>
+                        </h4>
                         <div class="row">
                             <span class="text-muted">Posted {{ job.posted.strftime('%Y-%m-%d') }}</span>
                         </div>
                         <div class="row">
                             <a class="mr-2" href="">Author: {{ job.first_name|title }}</a>
-                            </div>
+                        </div>
                     </div>
                     <div class="bi bi-cash float-right col-2">
                         <img

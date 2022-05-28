@@ -24,7 +24,10 @@ def get_jobs():
 def get_jobs_template():
     cursor = get_db_cursor()
     cursor.execute(
-        "SELECT * FROM new_job INNER JOIN customer c on new_job.customer_id = c.id"
+        "SELECT new_job.id as job_id, c.id as customer_id, c.first_name, c.is_blocked,"
+        "c.last_name, new_job.posted, new_job.description, new_job.price, new_job.status, "
+        "new_job.is_blocked, new_job.is_hourly_rate, new_job.header_ "
+        "FROM new_job INNER JOIN customer c on new_job.customer_id = c.id"
     )
     jobs = cursor.fetchall()
     close_cursor(cursor)
@@ -49,8 +52,7 @@ def count_job_applications(job_id):
     return 0
 
 
-@jobs.route('/<int:job_id>')
-def get_job(job_id):
+def get_job_template(job_id):
     cursor = get_db_cursor()
     cursor.execute(
         "SELECT * FROM new_job INNER JOIN customer c on new_job.customer_id = c.id WHERE new_job.id = (%s)",
@@ -64,7 +66,17 @@ def get_job(job_id):
     if job:
         job_compliment['job_apps'] = count_job_applications(job['id'])
         job['price'] = psql_money_to_dec(job['price'])
-        return render_template('concrete_job.html', job=job, job_compliment=job_compliment)
+
+        return render_template('job_template.html', job=job, job_compliment=job_compliment)
+
+    return None
+
+
+@jobs.route('/<int:job_id>', methods=['GET'])
+def get_job(job_id):
+    job_template = get_job_template(job_id)
+    if job_template:
+        return render_template('concrete_job.html', job_template=job_template)
 
     return redirect(url_for('jobs.get_jobs'))
 

@@ -19,7 +19,6 @@ auth = Blueprint('auth', __name__,
 @auth.route('/home')
 @auth.route('/index')
 def home():
-    print("HUI HOME?")
     jobs_template = get_jobs_template()
     return render_template('index.html', jobs_template=jobs_template)
 

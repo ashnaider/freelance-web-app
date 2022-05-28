@@ -1,16 +1,21 @@
 {% extends 'base.html' %}
 
-{% block user_buttons %}
-    <a class="nav-item nav-link" href="{{ url_for('auth.logout') }}">Add job</a>
+{% block header_block %}
+    <title>Freelancer</title>
 {% endblock %}
 
-{% block user_greetings %}
-    {% if g.user %}
-    {% else %}
-        User NOT logged
-        <a href="{{ url_for('auth.login') }}">Log In</a>
-    {% endif %}
+{% block home_btn %}
+    <a class="nav-item nav-link" href="{{ url_for('freelancer.index') }}">Home</a>
 {% endblock %}
+
+
+{#{% block user_greetings %}#}
+{#    {% if g.user %}#}
+{#    {% else %}#}
+{#        User NOT logged#}
+{#        <a href="{{ url_for('auth.login') }}">Log In</a>#}
+{#    {% endif %}#}
+{#{% endblock %}#}
 
 {% block content %}
     {% if jobs_template %}

@@ -2,7 +2,7 @@ from flask import Blueprint, flash, g, redirect, render_template, request, sessi
 from db import get_db_cursor, close_cursor
 from datetime import date
 
-from forms import NewJobForm
+from forms import NewJobForm, CustomerProfileForm
 
 from jobs import get_jobs_template
 from .my_jobs import get_customers_jobs
@@ -28,7 +28,8 @@ def index():
 def get_customer(user_id):
     cur = get_db_cursor()
     cur.execute(
-        'SELECT * FROM customer AS c INNER JOIN users AS u ON c.user_id = u.id WHERE user_id = %s',
+        'SELECT email, role, first_name, last_name, organisation_name, is_blocked, c.id as customer_id  '
+        'FROM customer AS c INNER JOIN users AS u ON c.user_id = u.id WHERE user_id = %s',
         (user_id,)
     )
     user = cur.fetchone()
@@ -47,37 +48,33 @@ def load_logged_in_user():
 
 @customer.route('/create_job', methods=['GET', 'POST'])
 def create_job():
-    form = NewJobForm()
-    if form.validate_on_submit():
-        header = form.title.data
-        description = form.description.data
-        price = float(form.price.data)
-        hourly_rate = True if request.form.get("hourly_rate") else False
-        # deadline = form.deadline.data
-        # deadline_str = str(deadline) + ' 12:00:00-00'
-        customer_id = g.user['id']
+    if g.user:
+        form = NewJobForm()
+        if form.validate_on_submit():
+            header = form.title.data
+            description = form.description.data
+            price = float(form.price.data)
+            hourly_rate = True if request.form.get("hourly_rate") else False
+            # deadline = form.deadline.data
+            # deadline_str = str(deadline) + ' 12:00:00-00'
+            customer_id = g.user['id']
 
-        print("price: ", price)
-        print("hourly rate: ", hourly_rate)
-        print("user: ", g.user)
-        print("user_id: ", g.user['user_id'])
+            cursor = get_db_cursor()
+            try:
+                cursor.execute(
+                    "INSERT INTO new_job (customer_id, header_, description, price, is_hourly_rate) "
+                    "VALUES (%s, %s, %s, %s, %s);",
+                    (customer_id, header, description, price, hourly_rate),
+                )
+            # new_user_id = cursor.fetchone()[0]
+            except Exception as e:
+                flash(e, 'danger')
+            finally:
+                close_cursor(cursor)
 
+        return render_template('customer/create_job.html', form=form)
 
-        cursor = get_db_cursor()
-        try:
-            print("add new record in new_job table")
-            cursor.execute(
-                "INSERT INTO new_job (customer_id, header_, description, price, is_hourly_rate) "
-                "VALUES (%s, %s, %s, %s, %s);",
-                (customer_id, header, description, price, hourly_rate),
-            )
-        # new_user_id = cursor.fetchone()[0]
-        except Exception as e:
-            flash(e, 'danger')
-        finally:
-            close_cursor(cursor)
-
-    return render_template('customer/create_job.html', form=form)
+    return redirect(url_for('auth.login'))
 
 
 @customer.route('/my_jobs')
@@ -85,4 +82,36 @@ def my_jobs():
     if g.user:
         jobs_template = get_customers_jobs(g.user['id'])
         return render_template('customer/index.html', jobs_template=jobs_template)
+    return redirect(url_for('auth.login'))
+
+
+@customer.route('/edit_profile', methods=['GET', 'POST'])
+def edit_profile():
+    load_logged_in_user()
+    if g.user:
+        form = CustomerProfileForm()
+
+        if form.validate_on_submit():
+            first_name = form.first_name.data.lower()
+            last_name = form.last_name.data.lower()
+            organisation_name = form.organisation_name.data
+
+            try:
+                cur = get_db_cursor()
+                cur.execute(
+                    """
+                    UPDATE customer SET
+                    first_name = %s, last_name = %s, organisation_name = %s
+                    WHERE id = %s;
+                    """,
+                    (first_name, last_name, organisation_name, g.user['customer_id'])
+                )
+                close_cursor(cur)
+            except Exception as e:
+                flash(str(e), 'danger')
+            else:
+                load_logged_in_user()
+
+        return render_template('customer/profile.html', form=form, profile=g.user)
+
     return redirect(url_for('auth.login'))

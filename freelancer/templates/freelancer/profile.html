@@ -1,34 +1,90 @@
-{% extends 'base.html' %}
+{% extends "freelancer/index.html" %}
 
-{% block body %}
-    <form method="post">
+{% block content %}
+    <div class="content-section">
+        <form method="POST" action="">
+            {{ form.hidden_tag() }}
+            <fieldset class="form-group">
+                <legend class="border-bottom mb-4">Edit profile</legend>
+                <div class="form-group">
+                    {{ form.email.label(class="form-control-label") }}
+                    {% if form.email.errors %}
+                        {{ form.email(class="form-control form-control-lg is-invalid") }}
+                        <div class="invalid-feedback">
+                            {% for error in form.email.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        {{ form.email(class="form-control form-control-lg", value=profile.email, readonly="readonly") }}
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    {{ form.first_name.label(class="form-control-label") }}
+                    {% if form.first_name.errors %}
+                        {{ form.first_name(class="form-control form-control-lg is-invalid") }}
+                        <div class="invalid-feedback">
+                            {% for error in form.first_name.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        {{ form.first_name(class="form-control form-control-lg", value=profile.first_name.capitalize()) }}
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    {{ form.last_name.label(class="form-control-label") }}
+                    {% if form.last_name.errors %}
+                        {{ form.last_name(class="form-control form-control-lg is-invalid") }}
+                        <div class="invalid-feedback">
+                            {% for error in form.last_name.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        {{ form.last_name(class="form-control form-control-lg", value=profile.last_name.capitalize()) }}
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    {{ form.specialization.label(class="form-control-label") }}
+                    {% if form.specialization.errors %}
+                        {{ form.specialization(class="form-control form-control-lg is-invalid") }}
+                        <div class="invalid-feedback">
+                            {% for error in form.specialization.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        {% if profile.resume_link %}
+                            {{ form.specialization(class="form-control form-control-lg", value=profile.specialization) }}
+                        {% else %}
+                            {{ form.specialization(class="form-control form-control-lg") }}
+                        {% endif %}
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    {{ form.resume_link.label(class="form-control-label") }}
+                    {% if form.resume_link.errors %}
+                        {{ form.resume_link(class="form-control form-control-lg is-invalid") }}
+                        <div class="invalid-feedback">
+                            {% for error in form.resume_link.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        {% if profile.resume_link %}
+                            {{ form.resume_link(class="form-control form-control-lg", value=profile.resume_link) }}
+                        {% else %}
+                            {{ form.resume_link(class="form-control form-control-lg") }}
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </fieldset>
 
-        <label for="first_name">First name</label>
-        <input name="first_name" id="first_name" value="{{ g.user['first_name'] }}" required>
+            <div class="form-group">
+                {{ form.submit(class="btn btn-outline-info") }}
+            </div>
 
-        <br>
-
-        <label for="last_name">Last name</label>
-        <input name="last_name" id="last_name" value="{{ g.user['last_name'] }}" required>
-
-        <br>
-
-        <label for="resume_link">Resume link</label>
-        <input name="resume_link" id="resume_link"
-               value="{{ '' if g.user['resume_link'] is none else g.user['resume_link'] }}">
-
-        <br>
-
-        <label for="specialization">Specialization</label>
-        <input name="specialization" id="specialization"
-               value="{{ '' if g.user['specialization'] is none else g.user['specialization'] }}">
-
-        <br>
-
-        <input type="submit" value="Update">
-
-        <br>
-    </form>
-    <br>
-    <button><a href="{{ url_for('freelancer.index') }}">Cancel</a></button>
-{% endblock %}
+        </form>
+    </div>
+{% endblock content %}

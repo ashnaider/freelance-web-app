@@ -121,3 +121,33 @@ class NewJobForm(FlaskForm):
         close_cursor(cursor)
         if record:
             raise ValidationError('Job with this header already exist.')
+
+
+
+class FreelancerProfileForm(FlaskForm):
+    email = StringField('Email')
+    first_name = StringField('First name', validators=[DataRequired(), Length(min=2, max=50)])
+    last_name = StringField('Last name', validators=[DataRequired(), Length(min=2, max=50)])
+
+    resume_link = StringField('Resume link')
+    specialization = StringField('Specialization', validators=[DataRequired(), Length(min=2, max=50)])
+
+    submit = SubmitField('Update')
+
+
+class CustomerProfileForm(FlaskForm):
+    email = StringField('Email')
+    first_name = StringField('First name', validators=[DataRequired(), Length(min=2, max=50)])
+    last_name = StringField('Last name', validators=[DataRequired(), Length(min=2, max=50)])
+
+    organisation_name = StringField('Organization name')
+
+    submit = SubmitField('Update')
+
+
+class JobApplication(FlaskForm):
+    description = TextAreaField('Description', validators=[DataRequired()])
+    price = DecimalField('Your price', validators=[DataRequired()])
+
+    submit = SubmitField('Apply')
+
