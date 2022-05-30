@@ -22,14 +22,14 @@ def get_jobs():
 
 
 def get_jobs_template():
-    cur = get_db_cursor()
+    cur = get_db_cursor('guest')
     cur.execute(
         """
         SELECT * FROM get_newest_jobs();
         """
     )
     jobs = cur.fetchall()
-    close_cursor(cur)
+    close_cursor(cur, 'guest')
 
     for job in jobs:
         job['price'] = psql_money_to_dec(job['price'])
@@ -37,22 +37,22 @@ def get_jobs_template():
     return render_template('jobs.html', jobs=jobs)
 
 
-def count_job_applications(job_id):
-    cursor = get_db_cursor()
-    cursor.execute(
-        """
-        SELECT * FROM count_job_applications(%s);
-        """,
-        (job_id,)
-    )
-    job = cursor.fetchone()
-    close_cursor(cursor)
+# def count_job_applications(job_id):
+#     cursor = get_db_cursor('guest')
+#     cursor.execute(
+#         """
+#         SELECT * FROM count_job_applications(%s);
+#         """,
+#         (job_id,)
+#     )
+#     job = cursor.fetchone()
+#     close_cursor(cursor, 'guest')
+#
+#     return job[0]
 
-    return job[0]
 
-
-def get_job_template(job_id):
-    cursor = get_db_cursor()
+def get_job_data(job_id):
+    cursor = get_db_cursor('guest')
     cursor.execute(
         """
         SELECT * FROM get_active_jobs() WHERE job_id = %s;
@@ -60,10 +60,18 @@ def get_job_template(job_id):
         (job_id,)
     )
     job = cursor.fetchone()
-    close_cursor(cursor)
+    print("Job: ", job)
+    close_cursor(cursor, 'guest')
 
     if job:
         job['price'] = psql_money_to_dec(job['price'])
+
+    return job
+
+
+def get_job_template(job_id):
+    job = get_job_data(job_id)
+    if job:
         return render_template('job_template.html', job=job)
 
     return None

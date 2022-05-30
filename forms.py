@@ -3,6 +3,7 @@ from flask_wtf.file import FileField, FileAllowed
 from wtforms import StringField, PasswordField, SubmitField, \
     BooleanField, TextAreaField, DateTimeField, FloatField, \
     DecimalField, DateField, BooleanField
+from wtforms.widgets import TextArea
 from wtforms.validators import DataRequired, Length, Email, EqualTo, ValidationError, Regexp
 # from flask_login import current_user
 # from flaskblog.models import User
@@ -24,13 +25,13 @@ class RegistrationForm(FlaskForm):
 
     def validate_email(self, responce):
         email = responce.data
-        cursor = get_db_cursor()
+        cursor = get_db_cursor('guest')
         cursor.execute(
             'SELECT * FROM users as u WHERE u.email = (%s)',
             (email,)
         )
         user = cursor.fetchone()
-        close_cursor(cursor)
+        close_cursor(cursor, 'guest')
         if user:
             raise ValidationError('That e-mail is already in use.')
 
@@ -44,13 +45,13 @@ class LoginForm(FlaskForm):
 
     def validate_email(self, responce):
         email = responce.data
-        cursor = get_db_cursor()
+        cursor = get_db_cursor('guest')
         cursor.execute(
             'SELECT * FROM users as u WHERE u.email = (%s)',
             (email,)
         )
         user = cursor.fetchone()
-        close_cursor(cursor)
+        close_cursor(cursor, 'guest')
         if user is None:
             raise ValidationError('e-mail does not exist.')
 
@@ -101,6 +102,7 @@ class ResetPasswordForm(FlaskForm):
 class NewJobForm(FlaskForm):
     title = StringField('Title', validators=[DataRequired()])
     description = TextAreaField('Description', validators=[DataRequired()])
+
     price = DecimalField('Price', validators=[DataRequired()])
 
     # deadline = DateField('Deadline', format='%Y-%m-%d', validators=[DataRequired()])
@@ -112,13 +114,13 @@ class NewJobForm(FlaskForm):
     #         raise ValidationError('Deadline should be later that today\'s date')
 
     def validate_title(self, title):
-        cursor = get_db_cursor()
+        cursor = get_db_cursor('customer')
         cursor.execute(
             'SELECT * FROM new_job as nj WHERE nj.header_ = (%s)',
             (title.data,)
         )
         record = cursor.fetchone()
-        close_cursor(cursor)
+        close_cursor(cursor, 'customer')
         if record:
             raise ValidationError('Job with this header already exist.')
 

@@ -1,3 +1,9 @@
+drop trigger if exists CHECK_POSTED_NEW_JOB ON new_job;
+drop function if exists CHECK_POSTED_NEW_JOB_F();
+
+drop trigger if exists CHECK_POSTED_NEW_JOB_ON_UPDATE on new_job;
+drop function if exists CHECK_POSTED_NEW_JOB_ON_UPDATE_F();
+
 drop function if exists GetAuthorOfMessage;
 drop table if exists technology_stack;
 drop table if exists technology;
@@ -102,13 +108,46 @@ create table customer (
 );
 
 
+CREATE OR REPLACE FUNCTION CHECK_POSTED_NEW_JOB_F() RETURNS TRIGGER
+    LANGUAGE PLPGSQL
+AS $$
+    BEGIN
+        if NEW.posted < CURRENT_TIMESTAMP then
+            raise EXCEPTION 'New job posted field must be greather of equal to time it was inserted!
+                Error while inserting new job with header %s', NEW.header_;
+        end if;
+        return NEW;
+    END
+$$;
+
+CREATE TRIGGER CHECK_POSTED_NEW_JOB
+    BEFORE INSERT ON new_job
+    FOR EACH ROW EXECUTE PROCEDURE CHECK_POSTED_NEW_JOB_F();
+
+
+CREATE OR REPLACE FUNCTION CHECK_POSTED_NEW_JOB_ON_UPDATE_F() RETURNS TRIGGER
+    LANGUAGE PLPGSQL
+AS $$
+    BEGIN
+        if NEW.posted < OLD.posted then
+            raise EXCEPTION 'New job posted field must be greather of equal to time it was inserted!
+                Error while inserting new job with header %s', NEW.header_;
+        end if;
+        return NEW;
+    END
+$$;
+
+CREATE TRIGGER CHECK_POSTED_NEW_JOB_ON_UPDATE
+    BEFORE UPDATE ON new_job
+    FOR EACH ROW EXECUTE PROCEDURE CHECK_POSTED_NEW_JOB_ON_UPDATE_F();
+
 create table new_job (
 	id serial not null primary key,
 	customer_id int not null
 		references customer(id)
 		on delete restrict on update cascade,
 
-    posted timestamp not null check (posted >= CURRENT_TIMESTAMP) default CURRENT_TIMESTAMP,
+    posted timestamp not null default CURRENT_TIMESTAMP,
 -- 	deadline timestamp   not null check (deadline > CURRENT_TIMESTAMP),
 	header_ varchar(250) not null,
 	description varchar(650) not null,
@@ -117,6 +156,9 @@ create table new_job (
     status project_status default 'new',
     is_blocked boolean default false
 );
+
+ALTER TABLE new_job
+DROP CONSTRAINT new_job_posted_check;
 
 
 create table application (

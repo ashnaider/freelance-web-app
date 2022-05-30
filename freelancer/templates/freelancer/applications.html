@@ -2,8 +2,11 @@
 
 
 {% block content %}
-    {% if applied_jobs %}
-        {{ applied_jobs|safe }}
+    {% if jobs_template %}
+        {{ jobs_template|safe }}
+    {% else %}
+        <h4>No applications yet.</h4>
+        <a href="{{ url_for('freelancer.index') }}">Search for jobs!</a>
     {% endif %}
 {% endblock %}
 

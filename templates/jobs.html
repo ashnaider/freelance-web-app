@@ -1,5 +1,11 @@
 {% if jobs %}
-    <h3>New jobs:</h3>
+    <h3 class="article-title">
+        {% if jobs_title %}
+            {{ jobs_title }}
+        {% else %}
+            New jobs:
+        {% endif %}
+    </h3>
     {% for job in jobs %}
         <article class="content-section">
 
@@ -8,17 +14,17 @@
                     <div class="col-10 float-left">
                         <h4>
                             <a class="article-title row"
-                                {% if g.user %}
-                                     {% if g.user.role == 'freelancer' %}
-                                          href="{{ url_for('freelancer.apply_job', job_id=job.job_id) }}"
-                                     {% elif g.user.role == 'customer' %}
-                                          href="{{ url_for('jobs.get_job', job_id=job.job_id) }}"
-                                     {% endif %}
-                                {% else %}
-                                     href="{{ url_for('jobs.get_job', job_id=job.job_id) }}"
-                                {% endif %}
+                                    {% if g.user %}
+                                        {% if g.user.role == 'freelancer' %}
+                               href="{{ url_for('freelancer.apply_job', job_id=job.job_id) }}"
+                                        {% elif g.user.role == 'customer' %}
+                               href="{{ url_for('customer.edit_job', job_id=job.job_id) }}"
+                                        {% endif %}
+                                    {% else %}
+                               href="{{ url_for('jobs.get_job', job_id=job.job_id) }}"
+                                    {% endif %}
                             >
-                            {{ job.job_header }}
+                                {{ job.job_header }}
                             </a>
                         </h4>
                         <div class="row">

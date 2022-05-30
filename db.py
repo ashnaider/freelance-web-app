@@ -7,24 +7,48 @@ from flask import current_app, g
 from flask.cli import with_appcontext
 
 
-def get_db_conn():
+def get_db_conn(role):
     if 'db_conn' not in g:
-        g.db_conn = psycopg2.connect(
-            dbname=current_app.config['DATABASE'],
-            user=current_app.config['USER'],
-            password=current_app.config['PASSWORD'],
-        )
+        print("Getting new role for user ", role)
+        if role == 'admin':
+            g.db_conn = psycopg2.connect(
+                dbname=current_app.config['DATABASE'],
+                user=current_app.config['ADMIN_USER'],
+                password=current_app.config['ADMIN_PASSWORD'],
+                host='localhost'
+            )
+        elif role == 'guest':
+            g.db_conn = psycopg2.connect(
+                dbname=current_app.config['DATABASE'],
+                user=current_app.config['GUEST_USER'],
+                password=current_app.config['GUEST_PASSWORD'],
+                host='localhost'
+            )
+        elif role == 'freelancer':
+            g.db_conn = psycopg2.connect(
+                dbname=current_app.config['DATABASE'],
+                user=current_app.config['FREELANCER_USER'],
+                password=current_app.config['FREELANCER_PASSWORD'],
+                host='localhost'
+            )
+        elif role == 'customer':
+            g.db_conn = psycopg2.connect(
+                dbname=current_app.config['DATABASE'],
+                user=current_app.config['CUSTOMER_USER'],
+                password=current_app.config['CUSTOMER_PASSWORD'],
+                host='localhost'
+            )
 
     return g.db_conn
 
 
-def get_db_cursor():
-    return get_db_conn().cursor(cursor_factory=psycopg2.extras.DictCursor)
+def get_db_cursor(role):
+    return get_db_conn(role).cursor(cursor_factory=psycopg2.extras.DictCursor)
 
 
-def close_cursor(cursor):
+def close_cursor(cursor, role):
     cursor.close()
-    get_db_conn().commit()
+    get_db_conn(role).commit()
 
 
 def close_db(e=None):

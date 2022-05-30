@@ -14,8 +14,18 @@ def create_app(test_config=None):
     app.config.from_mapping(
         SECRET_KEY='dev',
         DATABASE='freelancer-db',
-        USER='postgres',
-        PASSWORD='postgres',
+
+        ADMIN_USER='postgres',
+        ADMIN_PASSWORD='postgres',
+
+        FREELANCER_USER='freelancer_user',
+        FREELANCER_PASSWORD='freelancer',
+
+        CUSTOMER_USER='customer_user',
+        CUSTOMER_PASSWORD='customer',
+
+        GUEST_USER='guest_user',
+        GUEST_PASSWORD='guest',
     )
 
     if test_config is None:
@@ -42,15 +52,5 @@ def create_app(test_config=None):
     app.register_blueprint(freelancer)
     app.register_blueprint(customer)
     app.register_blueprint(jobs)
-
-
-    # from freelancer.auth import freelancer_auth
-    # app.register_blueprint(freelancer_auth)
-    #
-    # from customer.auth import customer_auth
-    # app.register_blueprint(customer_auth)
-    #
-    # from freelancer.home import freelancer
-    # app.register_blueprint(freelancer)
 
     return app
