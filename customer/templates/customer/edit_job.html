@@ -58,7 +58,10 @@
                         }
                     </script>
                     <input type="checkbox" name="is_hourly_rate" value="true" id="hourly_rate_chB"
-                           checked="{{ curr_job.is_hourly_rate }}">
+                           {% if curr_job.is_hourly_rate %}
+                               checked
+                            {% endif %}
+                    >
                     <label for="hourly_rate_chB">
                         Hourly rate
                     </label>

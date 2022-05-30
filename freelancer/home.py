@@ -18,7 +18,6 @@ freelancer = Blueprint(
 @freelancer.route('/index')
 @freelancer.route('/home')
 def index():
-    load_logged_in_user()
     jobs_template = get_jobs_template()
     if g.user:
         flash(f"Welcome back, {g.user['first_name'].capitalize()}!", 'success')
@@ -27,50 +26,49 @@ def index():
 
 
 def get_freelancer(user_id):
-    cur = get_db_cursor('freelancer')
-    cur.execute(
+    cursor = get_db_cursor()
+    cursor.execute(
         'SELECT email, role, first_name, last_name,  resume_link, specialization, is_blocked, f.id as freelancer_id '
         'FROM freelancer AS f INNER JOIN users AS u ON f.user_id = u.id WHERE f.user_id = %s',
         (user_id,)
     )
-    user = cur.fetchone()
-    close_cursor(cur, 'freelancer')
+    user = cursor.fetchone()
+    close_cursor(cursor)
+    close_db()
     return user
 
 
-@freelancer.before_app_request
+@freelancer.before_request
 def load_logged_in_user():
-    user_id = session.get('user_id')
+    if 'cursor' in g:
+        close_cursor(g.cursor)
     close_db()
-    get_db_conn(role='freelancer')
+
+    user_id = session.get('user_id')
     if user_id is None:
         g.user = None
     else:
+        g.user = {'role': 'freelancer'}
         g.user = get_freelancer(user_id)
+        g.cursor = get_db_cursor()
 
 
 @freelancer.route('/search', methods=['GET'])
 def search():
-    cur = get_db_cursor('freelancer')
     try:
-        pass
-        cur.execute(
+        g.cursor.execute(
             'SELECT * FROM new_job INNER JOIN customer AS c on new_job.customer_id = c.id'
         )
-        new_jobs = cur.fetchall()
+        new_jobs = g.cursor.fetchall()
     except Exception as exc:
         pass
-    finally:
-        close_cursor(cur, 'freelancer')
 
     print("new_jobs: ", new_jobs)
-
     return render_template('freelancer/jobs.html', jobs=new_jobs)
 
 
 @freelancer.route('/edit_profile', methods=['GET', 'POST'])
 def edit_profile():
-    load_logged_in_user()
     if g.user:
         form = FreelancerProfileForm()
 
@@ -81,8 +79,7 @@ def edit_profile():
             specialization = form.specialization.data
 
             try:
-                cur = get_db_cursor('freelancer')
-                cur.execute(
+                g.cursor.execute(
                     """
                     UPDATE freelancer SET
                     first_name = %s, last_name = %s, resume_link = %s, specialization = %s
@@ -90,7 +87,7 @@ def edit_profile():
                     """,
                     (first_name, last_name, resume_link, specialization, g.user['freelancer_id'])
                 )
-                close_cursor(cur, 'freelancer')
+                g.db_conn.commit()
             except Exception as e:
                 flash(str(e), 'danger')
             else:
@@ -102,36 +99,32 @@ def edit_profile():
 
 
 def is_application_exist(job_id, fr_id):
-    cur = get_db_cursor('freelancer')
-    cur.execute(
+    g.cursor.execute(
         """
         SELECT * FROM is_application_exist(%s, %s);
         """,
         (job_id, fr_id)
     )
-    exist = cur.fetchone()['is_application_exist']
-    close_cursor(cur, 'freelancer')
+    exist = g.cursor.fetchone()['is_application_exist']
     return exist
 
 
 def get_application(job_id, fr_id):
-    cur = get_db_cursor('freelancer')
-    cur.execute(
+    g.cursor.execute(
         """
         SELECT * FROM application WHERE job_id = %s and freelancer_id = %s ;
         """,
         (job_id, fr_id)
     )
-    application = cur.fetchone()
+    application = g.cursor.fetchone()
     if application:
         application['price'] = psql_money_to_dec(application['price'])
-    close_cursor(cur, 'freelancer')
+
     return application
 
 
 @freelancer.route('/apply_job/<int:job_id>', methods=['GET', 'POST'])
 def apply_job(job_id):
-    load_logged_in_user()
     if g.user:
         form = JobApplication()
         fr_id = g.user['freelancer_id']
@@ -142,14 +135,13 @@ def apply_job(job_id):
         if request.method == 'POST':
             if request.form['submit'] == 'Cancel application' and application:
                 try:
-                    cur = get_db_cursor('freelancer')
-                    cur.execute(
+                    g.cursor.execute(
                         """
                         DELETE FROM application WHERE job_id = %s and freelancer_id = %s
                         """,
                         (job_id, fr_id)
                     )
-                    close_cursor(cur, 'freelancer')
+
                 except Exception as e:
                     flash(str(e), 'danger')
 
@@ -160,8 +152,7 @@ def apply_job(job_id):
                 price = float(form.price.data)
 
                 try:
-                    cur = get_db_cursor('freelancer')
-                    cur.execute(
+                    g.cursor.execute(
                         """
                         INSERT INTO application (price, description, freelancer_id, job_id)
                         VALUES (%s, %s, %s, %s);
@@ -169,13 +160,13 @@ def apply_job(job_id):
                         (price, description, fr_id, job_id)
                     )
                     print("After insertion into application")
-                    close_cursor(cur, 'freelancer')
                 except Exception as e:
                     flash(str(e), 'danger')
                 else:
                     application = get_application(job_id, fr_id)
                     job_template = get_job_template(job_id)
 
+            g.db_conn.commit()
 
         return render_template('freelancer/job_application.html',
                                job_template=job_template,
@@ -186,15 +177,13 @@ def apply_job(job_id):
 
 
 def get_applied_jobs_template(fr_id):
-    cur = get_db_cursor('freelancer')
-    cur.execute(
+    g.cursor.execute(
         """
         SELECT * FROM get_applied_jobs(%s);
         """,
         (fr_id,)
     )
-    jobs = cur.fetchall()
-    close_cursor(cur, 'freelancer')
+    jobs = g.cursor.fetchall()
     close_db()
 
     for job in jobs:
@@ -205,7 +194,6 @@ def get_applied_jobs_template(fr_id):
 
 @freelancer.route('/applications', methods=['GET'])
 def get_applied_jobs():
-    load_logged_in_user()
     if g.user:
         jobs_template = get_applied_jobs_template(g.user['freelancer_id'])
         return render_template('freelancer/applications.html', jobs_template=jobs_template)

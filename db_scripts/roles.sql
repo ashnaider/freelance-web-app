@@ -31,12 +31,17 @@ GRANT USAGE, SELECT ON SEQUENCE new_job_id_seq TO customer_user;
 -------------- Guest User --------------
 CREATE USER guest_user WITH PASSWORD 'guest';
 --- Tables ---
-GRANT SELECT ON users TO guest_user;
+GRANT SELECT, INSERT ON users TO guest_user;
 GRANT SELECT ON new_job TO guest_user;
-GRANT SELECT ON customer TO guest_user;
 GRANT SELECT ON application TO guest_user;
+GRANT SELECT, INSERT ON customer TO guest_user;
+GRANT SELECT, INSERT ON freelancer TO guest_user;
 --- Functions ---
 GRANT ALL ON FUNCTION get_active_jobs() TO guest_user;
+--- Sequences ---
+GRANT ALL ON SEQUENCE users_id_seq TO guest_user;
+GRANT ALL ON SEQUENCE customer_id_seq TO guest_user;
+GRANT ALL ON SEQUENCE freelancer_id_seq TO guest_user;
 
 
 

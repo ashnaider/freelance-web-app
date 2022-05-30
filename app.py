@@ -1,11 +1,12 @@
 import os
 
-from flask import Flask, render_template
+from flask import Flask, render_template, g
 
 from auth import auth
 from freelancer.home import freelancer
 from customer.home import customer
 from jobs import jobs, get_jobs_template
+from db import *
 
 
 def create_app(test_config=None):
@@ -44,6 +45,11 @@ def create_app(test_config=None):
     @app.route('/')
     @app.route('/index')
     def home():  # put application's code here
+        if 'cursor' in g:
+            close_cursor(g.cursor)
+        close_db()
+
+        g.cursor = get_db_cursor()
         jobs_template = get_jobs_template()
         return render_template('index.html', jobs_template=jobs_template)
 

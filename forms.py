@@ -25,13 +25,13 @@ class RegistrationForm(FlaskForm):
 
     def validate_email(self, responce):
         email = responce.data
-        cursor = get_db_cursor('guest')
+        cursor = get_db_cursor()
         cursor.execute(
             'SELECT * FROM users as u WHERE u.email = (%s)',
             (email,)
         )
         user = cursor.fetchone()
-        close_cursor(cursor, 'guest')
+        close_cursor(cursor)
         if user:
             raise ValidationError('That e-mail is already in use.')
 
@@ -45,13 +45,13 @@ class LoginForm(FlaskForm):
 
     def validate_email(self, responce):
         email = responce.data
-        cursor = get_db_cursor('guest')
+        cursor = get_db_cursor()
         cursor.execute(
             'SELECT * FROM users as u WHERE u.email = (%s)',
             (email,)
         )
         user = cursor.fetchone()
-        close_cursor(cursor, 'guest')
+        close_cursor(cursor)
         if user is None:
             raise ValidationError('e-mail does not exist.')
 
@@ -114,13 +114,13 @@ class NewJobForm(FlaskForm):
     #         raise ValidationError('Deadline should be later that today\'s date')
 
     def validate_title(self, title):
-        cursor = get_db_cursor('customer')
+        cursor = get_db_cursor()
         cursor.execute(
             'SELECT * FROM new_job as nj WHERE nj.header_ = (%s)',
             (title.data,)
         )
         record = cursor.fetchone()
-        close_cursor(cursor, 'customer')
+        close_cursor(cursor)
         if record:
             raise ValidationError('Job with this header already exist.')
 

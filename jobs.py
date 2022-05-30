@@ -6,7 +6,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 from forms import RegistrationForm, LoginForm
 
-from db import get_db_conn, get_db_cursor, close_cursor
+from db import *
 from utils import *
 
 
@@ -22,14 +22,15 @@ def get_jobs():
 
 
 def get_jobs_template():
-    cur = get_db_cursor('guest')
+    cur = get_db_cursor()
     cur.execute(
         """
         SELECT * FROM get_newest_jobs();
         """
     )
     jobs = cur.fetchall()
-    close_cursor(cur, 'guest')
+    close_cursor(cur)
+    close_db()
 
     for job in jobs:
         job['price'] = psql_money_to_dec(job['price'])
@@ -37,31 +38,17 @@ def get_jobs_template():
     return render_template('jobs.html', jobs=jobs)
 
 
-# def count_job_applications(job_id):
-#     cursor = get_db_cursor('guest')
-#     cursor.execute(
-#         """
-#         SELECT * FROM count_job_applications(%s);
-#         """,
-#         (job_id,)
-#     )
-#     job = cursor.fetchone()
-#     close_cursor(cursor, 'guest')
-#
-#     return job[0]
-
-
 def get_job_data(job_id):
-    cursor = get_db_cursor('guest')
-    cursor.execute(
+    cur = get_db_cursor()
+    cur.execute(
         """
         SELECT * FROM get_active_jobs() WHERE job_id = %s;
         """,
         (job_id,)
     )
-    job = cursor.fetchone()
-    print("Job: ", job)
-    close_cursor(cursor, 'guest')
+    job = cur.fetchone()
+    close_cursor(cur)
+    close_db()
 
     if job:
         job['price'] = psql_money_to_dec(job['price'])

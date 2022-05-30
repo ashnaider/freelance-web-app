@@ -7,9 +7,14 @@ from flask import current_app, g
 from flask.cli import with_appcontext
 
 
-def get_db_conn(role):
+def get_db_conn():
     if 'db_conn' not in g:
+        if 'user' in g:
+            role = g.user['role']
+        else:
+            role = 'guest'
         print("Getting new role for user ", role)
+
         if role == 'admin':
             g.db_conn = psycopg2.connect(
                 dbname=current_app.config['DATABASE'],
@@ -42,13 +47,13 @@ def get_db_conn(role):
     return g.db_conn
 
 
-def get_db_cursor(role):
-    return get_db_conn(role).cursor(cursor_factory=psycopg2.extras.DictCursor)
+def get_db_cursor():
+    return get_db_conn().cursor(cursor_factory=psycopg2.extras.DictCursor)
 
 
-def close_cursor(cursor, role):
+def close_cursor(cursor):
     cursor.close()
-    get_db_conn(role).commit()
+    get_db_conn().commit()
 
 
 def close_db(e=None):
