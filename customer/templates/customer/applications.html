@@ -1,8 +1,9 @@
 {% extends 'customer/index.html' %}
 
-
 {% block content %}
-    {% if jobs_template %}
-        {{ jobs_template|safe }}
+    {% if applications_template %}
+        {{ applications_template|safe }}
+    {% else %}
+        <h3>No applications yet.</h3>
     {% endif %}
 {% endblock %}

@@ -1,0 +1,51 @@
+{% if applications %}
+    <h3 class="article-title">
+        {% if applications_title %}
+            {{ applications_title }}
+        {% else %}
+            Applications: {{ applications|length }}
+        {% endif %}
+    </h3>
+    {% for application in applications %}
+        <article class="content-section">
+            <div class="container">
+                <div class="row">
+                    <div class="col-10 float-left">
+                        <h4>
+                            <a class="article-title row"
+                                    {#                                   href="{{ url_for('customer.edit_job', job_id=job.job_id) }}">#}
+                               href="{{ url_for('customer.concrete_application', app_id=application.app_id) }}">
+                                {% if application.app_description|length >= 30 %}
+                                    {{ application.app_description[:30] }}...
+                                {% else %}
+                                    {{ application.app_description }}
+                                {% endif %}
+
+                            </a>
+                        </h4>
+                        <div class="row">
+                            <span class="text-muted">Applied {{ application.app_time.strftime('%Y-%m-%d') }}</span>
+                        </div>
+                        <div class="row">
+                            <a class="mr-2" href="">Freelancer: {{ application.fr_f_name|title }}</a>
+                        </div>
+                    </div>
+                    <div class="bi bi-cash float-right col-2">
+                        <img
+                                src="../../../static/img/cash.svg"
+                                alt="cash logo"
+                                height="25"
+                                width="25"/>
+
+                        <i>{{ application.app_price }}$</i>
+                        <div>
+                            <div class="text-muted">for project</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </article>
+    {% endfor %}
+{% else %}
+    <h3>No applications yet.</h3>
+{% endif %}

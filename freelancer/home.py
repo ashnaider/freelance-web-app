@@ -130,6 +130,7 @@ def apply_job(job_id):
         fr_id = g.user['freelancer_id']
 
         job_template = get_job_template(job_id)
+        load_logged_in_user()
         application = get_application(job_id, fr_id)
 
         if request.method == 'POST':
@@ -141,7 +142,7 @@ def apply_job(job_id):
                         """,
                         (job_id, fr_id)
                     )
-
+                    g.db_conn.commit()
                 except Exception as e:
                     flash(str(e), 'danger')
 
@@ -159,14 +160,14 @@ def apply_job(job_id):
                         """,
                         (price, description, fr_id, job_id)
                     )
+                    g.db_conn.commit()
                     print("After insertion into application")
                 except Exception as e:
                     flash(str(e), 'danger')
                 else:
                     application = get_application(job_id, fr_id)
+                    load_logged_in_user()
                     job_template = get_job_template(job_id)
-
-            g.db_conn.commit()
 
         return render_template('freelancer/job_application.html',
                                job_template=job_template,
@@ -184,7 +185,6 @@ def get_applied_jobs_template(fr_id):
         (fr_id,)
     )
     jobs = g.cursor.fetchall()
-    close_db()
 
     for job in jobs:
         job['price'] = psql_money_to_dec(job['price'])

@@ -194,15 +194,89 @@ def edit_profile():
     return redirect(url_for('auth.login'))
 
 
+def get_job_applications_data(cust_id, job_id):
+    g.cursor.execute(
+        """
+        SELECT * FROM get_customer_applications(%s) AS apps WHERE apps.job_id = %s ;
+        """,
+        (cust_id, job_id)
+    )
+    app_data = g.cursor.fetchall()
 
-def get_customer_applications(cust_id):
-    pass
+    for app in app_data:
+        app['app_price'] = psql_money_to_dec(app['app_price'])
+        app['job_price'] = psql_money_to_dec(app['job_price'])
+
+    return app_data
+
+
+@customer.route('/job/<int:job_id>')
+def explore_job(job_id):
+    if g.user:
+        job_data = get_job_data(job_id)
+        load_logged_in_user()
+        if job_data:
+            if job_data['customer_id'] == g.user['customer_id']:
+                job_apps = get_job_applications_data(g.user['customer_id'], job_id)
+                print("job_apps: ", job_apps)
+                job_apps_template = render_template('customer/applications_template.html', applications=job_apps)
+                return render_template('customer/concrete_job.html', job=job_data, applications_template=job_apps_template)
+            else:
+                return render_template('customer/concrete_job.html', job=job_data)
+
+        return redirect(url_for('jobs.get_jobs'))
+
+    return redirect(url_for('auth.login'))
+
+
+def get_customer_applications_template(cust_id):
+    g.cursor.execute(
+        """
+        SELECT * FROM get_customer_applications(%s);
+        """,
+        (cust_id,)
+    )
+    applications = g.cursor.fetchall()
+
+    for app in applications:
+        app['app_price'] = psql_money_to_dec(app['app_price'])
+        app['job_price'] = psql_money_to_dec(app['job_price'])
+    return render_template('customer/applications_template.html', applications=applications)
 
 
 @customer.route('/applications')
 def applications():
-    load_logged_in_user()
     if g.user:
-        applications_template = get_customer_applications(g.user['customer_id'])
-        return render_template('customer/applicataions.html', applications_template=applications_template)
+        applications_template = get_customer_applications_template(g.user['customer_id'])
+        return render_template('customer/applications.html', applications_template=applications_template)
     return redirect(url_for('auth.login'))
+
+
+def get_customer_app_data(cust_id, app_id):
+    g.cursor.execute(
+        """
+        SELECT * FROM get_customer_applications(%s) AS apps WHERE apps.app_id = %s ;
+        """,
+        (cust_id, app_id)
+    )
+    app_data = g.cursor.fetchone()
+
+    if app_data:
+        app_data['app_price'] = psql_money_to_dec(app_data['app_price'])
+        app_data['job_price'] = psql_money_to_dec(app_data['job_price'])
+
+    return app_data
+
+def get_customer_app_template(cust_id, app_id):
+    app_data = get_customer_app_data(cust_id, app_id)
+    return render_template('customer/app_template.html', app=app_data)
+
+
+@customer.route('/application/<int:app_id>', methods=['GET', 'SET'])
+def concrete_application(app_id):
+    if g.user:
+        app_data = get_customer_app_data(g.user['customer_id'], app_id)
+        app_template = render_template('customer/app_template.html', app=app_data)
+        job_data = get_job_data(app_data['job_id'])
+        return render_template('customer/app_concrete.html', app_template=app_template, job=job_data)
+    return redirect('auth.login')

@@ -1,0 +1,24 @@
+<div class="content-section">
+    {% if app %}
+        <h3 class="article-title">
+{#            Application for#}
+{#            <a href="">#}
+{#                {{ app.job_header[:20] }}#}
+{#                {% if app.job_header|length > 20 %}#}
+{#                    ...#}
+{#                {% endif %}#}
+{#            </a>#}
+        <a href="">{{ app.fr_f_name|title ~ ' ' ~ app.fr_l_name|title }}</a>
+        </h3>
+        <p class="text-muted">
+            {{ app.app_time.strftime('%Y-%m-%d') }}
+        </p>
+        <div class="bi bi-cash">
+            <img src="../../../static/img/cash.svg" alt="cash logo" height="25" width="25"/>
+            <i>{{ app.app_price }}$</i>
+                for project
+        </div>
+        <p class="text-muted"></p>
+        <p class="article-content">{{ app.app_description }}</p>
+    {% endif %}
+</div>
