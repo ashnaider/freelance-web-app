@@ -185,3 +185,17 @@ def edit_profile():
         return render_template('customer/profile.html', form=form, profile=g.user)
 
     return redirect(url_for('auth.login'))
+
+
+
+def get_customer_applications(cust_id):
+    pass
+
+
+@customer.route('/applications')
+def applications():
+    load_logged_in_user()
+    if g.user:
+        applications_template = get_customer_applications(g.user['customer_id'])
+        return render_template('customer/applicataions.html', applications_template=applications_template)
+    return redirect(url_for('auth.login'))

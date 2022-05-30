@@ -114,7 +114,7 @@ CREATE OR REPLACE FUNCTION GET_APPLIED_JOBS(fr_id integer) RETURNS SETOF JOB_FUL
 AS $$
     BEGIN
         return query
-        select j.job_id, email, first_name, last_name, organisation_name,
+        select j.job_id, j.customer_id, email, first_name, last_name, organisation_name,
         posted, job_header, j.description, j.price, is_hourly_rate,
         applications_count
         from GET_ACTIVE_JOBS() as j inner join application as a on a.job_id = j.job_id

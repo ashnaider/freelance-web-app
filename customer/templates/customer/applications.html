@@ -1,0 +1,8 @@
+{% extends 'customer/index.html' %}
+
+
+{% block content %}
+    {% if jobs_template %}
+        {{ jobs_template|safe }}
+    {% endif %}
+{% endblock %}

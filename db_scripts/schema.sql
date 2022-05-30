@@ -157,9 +157,6 @@ create table new_job (
     is_blocked boolean default false
 );
 
-ALTER TABLE new_job
-DROP CONSTRAINT new_job_posted_check;
-
 
 create table application (
 	id serial not null primary key,

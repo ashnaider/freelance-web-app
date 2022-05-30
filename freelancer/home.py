@@ -195,6 +195,7 @@ def get_applied_jobs_template(fr_id):
     )
     jobs = cur.fetchall()
     close_cursor(cur, 'freelancer')
+    close_db()
 
     for job in jobs:
         job['price'] = psql_money_to_dec(job['price'])

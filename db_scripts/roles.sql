@@ -5,7 +5,7 @@ DROP USER IF EXISTS guest_user;
 -------------- Freelancer User --------------
 CREATE USER freelancer_user WITH PASSWORD 'freelancer';
 --- Tables ---
-GRANT SELECT ON freelancer TO freelancer_user;
+GRANT SELECT, UPDATE, DELETE ON freelancer TO freelancer_user;
 GRANT SELECT ON users TO freelancer_user;
 GRANT SELECT ON customer TO freelancer_user;
 GRANT SELECT ON new_job TO freelancer_user;
