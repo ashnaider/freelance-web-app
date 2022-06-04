@@ -1,3 +1,6 @@
+drop trigger if exists DELETE_JOB_APPLICATIONS on new_job;
+drop function if exists DELETE_JOB_APPLICATIONS_F();
+
 drop trigger if exists CHECK_POSTED_NEW_JOB ON new_job;
 drop function if exists CHECK_POSTED_NEW_JOB_F();
 
@@ -75,6 +78,7 @@ create table freelancer (
     unique (id, user_id)
 );
 
+
 create table technology (
 	id serial not null primary key,
 	tech_name varchar(250) not NULL
@@ -141,6 +145,20 @@ CREATE TRIGGER CHECK_POSTED_NEW_JOB_ON_UPDATE
     BEFORE UPDATE ON new_job
     FOR EACH ROW EXECUTE PROCEDURE CHECK_POSTED_NEW_JOB_ON_UPDATE_F();
 
+
+CREATE OR REPLACE FUNCTION DELETE_JOB_APPLICATIONS_F() RETURNS TRIGGER
+    LANGUAGE PLPGSQL
+AS $$
+    BEGIN
+        delete from application where job_id = OLD.id;
+        return OLD;
+    END
+$$;
+
+CREATE TRIGGER DELETE_JOB_APPLICATIONS
+    BEFORE DELETE ON new_job
+    FOR EACH ROW EXECUTE PROCEDURE DELETE_JOB_APPLICATIONS_F();
+
 create table new_job (
 	id serial not null primary key,
 	customer_id int not null
@@ -148,6 +166,8 @@ create table new_job (
 		on delete restrict on update cascade,
 
     posted timestamp not null default CURRENT_TIMESTAMP,
+    started timestamp,
+    finished timestamp,
 -- 	deadline timestamp   not null check (deadline > CURRENT_TIMESTAMP),
 	header_ varchar(250) not null,
 	description varchar(650) not null,

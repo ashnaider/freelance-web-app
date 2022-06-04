@@ -169,6 +169,19 @@ def apply_job(job_id):
                     load_logged_in_user()
                     job_template = get_job_template(job_id)
 
+            if request.form['submit'] == 'Start':
+                try:
+                    g.cursor.execute(
+                        """
+                        DELETE FROM application WHERE job_id = %s and freelancer_id = %s
+                        """,
+                        (job_id, fr_id)
+                    )
+                    g.db_conn.commit()
+                except Exception as e:
+                    flash(str(e), 'danger')
+
+
         return render_template('freelancer/job_application.html',
                                job_template=job_template,
                                form=form,
@@ -189,7 +202,7 @@ def get_applied_jobs_template(fr_id):
     for job in jobs:
         job['price'] = psql_money_to_dec(job['price'])
 
-    return render_template('jobs.html', jobs=jobs, jobs_title="Applications: ")
+    return render_template('freelancer/jobs.html', jobs=jobs)
 
 
 @freelancer.route('/applications', methods=['GET'])

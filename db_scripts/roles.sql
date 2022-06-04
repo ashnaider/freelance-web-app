@@ -20,12 +20,16 @@ CREATE USER customer_user WITH PASSWORD 'customer';
 --- Tables ---
 GRANT SELECT, INSERT, UPDATE, DELETE ON customer TO customer_user;
 GRANT SELECT, INSERT, UPDATE, DELETE ON new_job TO customer_user;
+GRANT DELETE ON application TO customer_user;
 GRANT SELECT ON users TO customer_user;
 GRANT SELECT ON application TO customer_user;
 GRANT SELECT ON freelancer TO customer_user;
 --- Sequences ---
 GRANT USAGE, SELECT ON SEQUENCE new_job_id_seq TO customer_user;
 --- Procedures ---
+--- Functions ---
+REVOKE EXECUTE ON FUNCTION delete_job_applications_f() FROM customer_user;
+GRANT TRIGGER ON application TO customer_user;
 
 
 

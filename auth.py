@@ -20,6 +20,7 @@ def home():
     jobs_template = get_jobs_template()
     return render_template('index.html', jobs_template=jobs_template)
 
+
 @auth.before_request
 def load_cursor():
     if 'cursor' in g:

@@ -1,11 +1,12 @@
+<h3 class="article-title ml-3">
+    Jobs in progress:
+    {% if jobs %}
+        {{ jobs|length }}
+    {% else %}
+        0
+    {% endif %}
+ </h3>
 {% if jobs %}
-    <h3 class="article-title">
-        {% if jobs_title %}
-            {{ jobs_title }}
-        {% else %}
-            New jobs:
-        {% endif %}
-    </h3>
     {% for job in jobs %}
         <article class="content-section">
 
@@ -14,7 +15,7 @@
                     <div class="col-10 float-left">
                         <h4>
                             <a class="article-title row"
-                               href="{{ url_for('customer.in_progress_jobs') }}">
+                               href="{{ url_for('customer.explore_job', job_id=job.job_id) }}">
                                 {{ job.job_header }}
                             </a>
                         </h4>

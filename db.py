@@ -43,6 +43,8 @@ def get_db_conn():
                 password=current_app.config['CUSTOMER_PASSWORD'],
                 host='localhost'
             )
+    else:
+        print("db_conn in g")
 
     return g.db_conn
 

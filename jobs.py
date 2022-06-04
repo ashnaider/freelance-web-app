@@ -38,7 +38,7 @@ def get_jobs_template():
     return render_template('jobs.html', jobs=jobs)
 
 
-def get_job_data(job_id):
+def get_active_job_data(job_id):
     cur = get_db_cursor()
     cur.execute(
         """
@@ -56,8 +56,25 @@ def get_job_data(job_id):
     return job
 
 
+def get_job_data(job_id):
+    cur = get_db_cursor()
+    cur.execute(
+        """
+        SELECT * FROM get_all_jobs() WHERE job_id = %s;
+        """,
+        (job_id,)
+    )
+    job = cur.fetchone()
+    close_cursor(cur)
+    close_db()
+
+    if job:
+        job['price'] = psql_money_to_dec(job['price'])
+
+    return job
+
 def get_job_template(job_id):
-    job = get_job_data(job_id)
+    job = get_active_job_data(job_id)
     if job:
         return render_template('job_template.html', job=job)
 

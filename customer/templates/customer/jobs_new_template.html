@@ -1,11 +1,12 @@
+<h3 class="article-title ml-3">
+    New jobs:
+    {% if jobs %}
+        {{ jobs|length }}
+    {% else %}
+        0
+    {% endif %}
+</h3>
 {% if jobs %}
-    <h3 class="article-title">
-        {% if jobs_title %}
-            {{ jobs_title }}
-        {% else %}
-            New jobs:
-        {% endif %}
-    </h3>
     {% for job in jobs %}
         <article class="content-section">
 

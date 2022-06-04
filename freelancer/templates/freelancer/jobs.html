@@ -1,0 +1,77 @@
+{% if jobs %}
+    <h3 class="article-title">
+        Applications:
+        {% if jobs %}
+            {{ jobs|length }}
+        {% else %}
+            0
+        {% endif %}
+    </h3>
+    {% for job in jobs %}
+        <article class="content-section">
+
+            <div class="container">
+                <div class="row">
+                    <div class="col-10 float-left">
+                        <h4>
+                            <a class="article-title row"
+                                    {% if g.user %}
+                                        {% if g.user.role == 'freelancer' %}
+                               href="{{ url_for('freelancer.apply_job', job_id=job.job_id) }}"
+                                        {% endif %}
+                                    {% else %}
+                               href="{{ url_for('jobs.get_job', job_id=job.job_id) }}"
+                                    {% endif %}
+                            >
+                                {{ job.job_header }}
+                            </a>
+                        </h4>
+                        <div class="row">
+                            <span class="text-muted">Posted {{ job.posted.strftime('%Y-%m-%d') }}</span>
+                            <span class="ml-2 mr-2">&bull;</span>
+                            {{ job.applications_count }}
+                            {% if job.applications_count == 1 %}
+                                application
+                            {% else %}
+                                applications
+                            {% endif %}
+                        </div>
+                        <div class="row">
+                            <a class="mr-2" href="">Author: {{ job.first_name|title }}</a>
+                        </div>
+                    </div>
+                    <div class="bi bi-cash float-right col-2">
+                        <img
+                                src="../static/img/cash.svg"
+                                alt="cash logo"
+                                height="25"
+                                width="25"/>
+
+                        <i>{{ job.price }}$</i>
+                        <div>
+                            {% if job.is_hourly_rate %}per hour{% else %}
+                                <div class="text-muted">for project</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </article>
+    {% endfor %}
+    {#    {% for page_num in posts.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}#}
+    {#        {% if page_num %}#}
+    {#            {% if posts.page == page_num %}#}
+    {#                <a class="btn btn-info mb-4"#}
+    {#                   href="{{ url_for('main.home', page=page_num) }}">{{ page_num }}</a>#}
+    {#            {% else %}#}
+    {#                <a class="btn btn-outline-info mb-4"#}
+    {#                   href="{{ url_for('main.home', page=page_num) }}">{{ page_num }}</a>#}
+    {#            {% endif %}#}
+    {#        {% else %}#}
+    {#            ...#}
+    {#        {% endif %}#}
+    {#    {% endfor %}#}
+{% else %}
+    <h4>No applications yet.</h4>
+    <a href="{{ url_for('freelancer.index') }}">Search for jobs!</a>
+{% endif %}

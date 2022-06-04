@@ -1,0 +1,77 @@
+{% extends 'customer/my_jobs.html' %}
+
+{% block content %}
+    {% if job %}
+        <div class="content-section">
+            <form method="POST" action="">
+                {% if job %}
+                    <h2 class="article-title">{{ job.job_header }}</h2>
+                    <legend class="border-bottom mb-3">{{ legend }}</legend>
+                    <p class="text-muted">
+                        posted: {{ job.posted.strftime('%Y-%m-%d %H:%M') }}
+                        <br>
+                        started: {{ job.started.strftime('%Y-%m-%d %H:%M') }}
+                    </p>
+                    <legend class="border-bottom mb-3">{{ legend }}</legend>
+                    <div class="bi bi-cash">
+                    Customer price:
+                        <img src="../../../static/img/cash.svg" alt="cash logo" height="25" width="25"/>
+                        <i>{{ job.price }}$</i>
+                        {% if job.is_hourly_rate %}
+                            per hour
+                        {% else %}
+                            for project
+                        {% endif %}
+                    </div>
+                    <div class="bi bi-cash">
+                    Freelancer price:
+                        <img src="../../../static/img/cash.svg" alt="cash logo" height="25" width="25"/>
+                        <i>{{ performer_data.app_price }}$</i>
+                        {% if job.is_hourly_rate %}
+                            per hour
+                        {% else %}
+                            for project
+                        {% endif %}
+                    </div>
+                    <br>
+                    <legend class="border-bottom mb-3">{{ legend }}</legend>
+                    <h4>Job description:</h4>
+                    <p class="article-content">{{ job.description }}</p>
+                    <h4>Freelancer response:</h4>
+                    <p class="article-content">{{ performer_data.app_description }}</p>
+                    <legend class="border-bottom mb-3">{{ legend }}</legend>
+                    <p class="article-content">Freelancer: <a href=""> {{ performer_data.fr_f_name|capitalize }} {{ performer_data.fr_l_name|capitalize }} </a>
+                    </p>
+                    <p class="article-content">Freelancer e-mail: <i>{{ performer_data.fr_email }}</i></p>
+                {% endif %}
+
+                <div class="d-flex justify-content-between mt-5">
+                    <div class="d-flex flex-row">
+                        <div class="form-group">
+                            <input
+                                    type="submit"
+                                    class="btn btn-outline-info"
+                                    value="Finish"
+                                    name="submit">
+                        </div>
+{#                        <div class="form-group">#}
+{#                            <a href="{{ url_for('customer.explore_job', job_id=job.job_id) }}"#}
+{#                               type="submit"#}
+{#                               class="btn btn-outline-warning ml-4">#}
+{#                                Other applications#}
+{#                            </a>#}
+{#                        </div>#}
+                    </div>
+{#                    <div class="form-group">#}
+{#                        <input#}
+{#                                type="submit"#}
+{#                                class="btn btn-outline-danger "#}
+{#                                value="Complain to application"#}
+{#                                name="submit">#}
+{#                    </div>#}
+                </div>
+            </form>
+        </div>
+    {% endif %}
+{% endblock %}
+
