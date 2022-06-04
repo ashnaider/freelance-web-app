@@ -12,7 +12,7 @@
             {% endif %}
 
         </p>
-        <div class="bi bi-cash">
+        <div class="bi bi-cash" style="color: green;">
             <img src="../../../static/img/cash.svg" alt="cash logo" height="25" width="25"/>
             <i>{{ job.price }}$</i>
             {% if job.is_hourly_rate %}
@@ -21,7 +21,6 @@
                 for project
             {% endif %}
         </div>
-        <p class="text-muted"></p>
         <br>
         <p class="article-content">{{ job.description }}</p>
     {% endif %}

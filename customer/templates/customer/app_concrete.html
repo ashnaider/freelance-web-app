@@ -1,8 +1,8 @@
-{% extends 'customer/index.html' %}
+{% extends 'customer/my_jobs.html' %}
 
 {% block content %}
-    <div class="content-section">
-        <h3>Job</h3>
+{#    <div class="content-section">#}
+{#        <h3>Job</h3>#}
         {% if job %}
             <div class="content-section">
                 {% if job %}
@@ -35,52 +35,41 @@
         {% else %}
             <h3>Unable to find job.</h3>
         {% endif %}
-        <h3>Application</h3>
+    <div class="content-section">
+{#        <h3>Application</h3>#}
         {% if app_template %}
             {{ app_template|safe }}
         {% else %}
             <h3>Unable to find application.</h3>
         {% endif %}
 
-        <div class="d-flex justify-content-between">
-            <div class="d-flex flex-row">
-                <div class="form-group">
-                    <input
-                            type="submit"
-                            class="btn btn-outline-info"
-                            value="Accept"
-                            name="submit">
+        <form method="POST" action="">
+            <div class="d-flex justify-content-between">
+                <div class="d-flex flex-row">
+                    <div class="form-group">
+                        <input
+                                type="submit"
+                                class="btn btn-outline-info"
+                                value="Accept"
+                                name="submit">
+                    </div>
+                    <div class="form-group">
+                        <a href="{{ url_for('customer.explore_job', job_id=job.job_id) }}"
+                           type="submit"
+                           class="btn btn-outline-warning ml-4">
+                            Other applications
+                        </a>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <a href="{{ url_for('customer.explore_job', job_id=job.job_id) }}"
-                       type="submit"
-                       class="btn btn-outline-warning ml-4">
-                        Other applications
-                    </a>
-                </div>
+                            <div class="form-group">
+                                <input
+                                        type="submit"
+                                        class="btn btn-outline-danger "
+                                        value="Complain to application"
+                                        name="submit">
+                            </div>
             </div>
-            <div class="form-group">
-                <input
-                        type="submit"
-                        class="btn btn-outline-danger "
-                        value="Delete application"
-                        name="submit">
-            </div>
-        </div>
-
-        {#    <div class="form-group">#}
-        {#        <input#}
-        {#                type="submit"#}
-        {#                class="btn btn-outline-info float-left"#}
-        {#                value="Accept"#}
-        {#                name="submit">#}
-        {#    </div>#}
-        {#    <div class="form-group">#}
-        {#        <input#}
-        {#                type="submit"#}
-        {#                class="btn btn-outline-warning float-right"#}
-        {#                value="Other applications"#}
-        {#                name="submit">#}
-        {#    </div>#}
+        </form>
     </div>
 {% endblock %}
+

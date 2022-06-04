@@ -18,8 +18,8 @@ freelancer = Blueprint(
 @freelancer.route('/index')
 @freelancer.route('/home')
 def index():
-    jobs_template = get_jobs_template()
     if g.user:
+        jobs_template = get_jobs_template()
         flash(f"Welcome back, {g.user['first_name'].capitalize()}!", 'success')
         return render_template('freelancer/index.html', jobs_template=jobs_template)
     return redirect(url_for('auth.login'))

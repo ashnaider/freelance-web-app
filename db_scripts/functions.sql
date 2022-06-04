@@ -43,7 +43,7 @@ $$ LANGUAGE plpgsql;
 
 
 CREATE TYPE JOB_FULL_INFO
-AS (job_id integer, customer_id integer, email email_domain, first_name name_domain, last_name name_domain, organisation_name varchar(150),
+AS (job_id integer, job_status project_status, customer_id integer, email email_domain, first_name name_domain, last_name name_domain, organisation_name varchar(150),
        posted timestamp, job_header varchar(250), description varchar(650), price money, is_hourly_rate boolean,
        applications_count integer);
 
@@ -53,7 +53,7 @@ CREATE OR REPLACE FUNCTION GET_ACTIVE_JOBS() RETURNS SETOF JOB_FULL_INFO
 AS $$
     BEGIN
         return query
-        select j.id, c.id, u.email, c.first_name, c.last_name, c.organisation_name, j.posted, j.header_ as job_header,
+        select j.id, j.status, c.id, u.email, c.first_name, c.last_name, c.organisation_name, j.posted, j.header_ as job_header,
                j.description, j.price, j.is_hourly_rate, COUNT_JOB_APPLICATIONS(j.id) as applications_count
         from new_job as j
             inner join customer as c on c.id = j.customer_id
@@ -114,7 +114,7 @@ CREATE OR REPLACE FUNCTION GET_APPLIED_JOBS(fr_id integer) RETURNS SETOF JOB_FUL
 AS $$
     BEGIN
         return query
-        select j.job_id, j.customer_id, email, first_name, last_name, organisation_name,
+        select j.job_id, j.job_status, j.customer_id, email, first_name, last_name, organisation_name,
         posted, job_header, j.description, j.price, is_hourly_rate,
         applications_count
         from GET_ACTIVE_JOBS() as j inner join application as a on a.job_id = j.job_id

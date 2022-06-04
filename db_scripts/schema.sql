@@ -154,6 +154,7 @@ create table new_job (
 	price money not null check (price > 0::money),
 	is_hourly_rate boolean default false,
     status project_status default 'new',
+    application_id integer,
     is_blocked boolean default false
 );
 

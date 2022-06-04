@@ -1,11 +1,16 @@
-{% if jobs %}
-    <h3 class="article-title">
-        {% if jobs_title %}
-            {{ jobs_title }}
+<h3 class="article-title">
+    {% if jobs_title %}
+        {{ jobs_title }} :
+        {% if jobs %}
+            {{ jobs|length }}
         {% else %}
-            New jobs:
+            0
         {% endif %}
-    </h3>
+    {% else %}
+        New jobs:
+    {% endif %}
+</h3>
+{% if jobs %}
     {% for job in jobs %}
         <article class="content-section">
 
@@ -29,6 +34,13 @@
                         </h4>
                         <div class="row">
                             <span class="text-muted">Posted {{ job.posted.strftime('%Y-%m-%d') }}</span>
+                            <span class="ml-2 mr-2">&bull;</span>
+                            {{ job.applications_count }}
+                            {% if job.applications_count == 1 %}
+                                application
+                            {% else %}
+                                applications
+                            {% endif %}
                         </div>
                         <div class="row">
                             <a class="mr-2" href="">Author: {{ job.first_name|title }}</a>
@@ -65,4 +77,8 @@
     {#            ...#}
     {#        {% endif %}#}
     {#    {% endfor %}#}
+{% else %}
+    <h5 class="article-title">
+        There are no jobs.
+    </h5>
 {% endif %}

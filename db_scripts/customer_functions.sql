@@ -1,11 +1,17 @@
+DROP FUNCTION IF EXISTS GET_CUSTOMER_NEW_JOBS(cust_id integer);
+DROP FUNCTION IF EXISTS GET_CUSTOMER_IN_PROGRESS_JOBS(cust_id integer);
+DROP FUNCTION IF EXISTS GET_CUSTOMER_DONE_JOBS(cust_id integer);
+
 DROP FUNCTION IF EXISTS GET_CUSTOMER_APPLICATIONS(cust_id integer);
 DROP FUNCTION IF EXISTS GET_CUSTOMER_JOBS(cust_id integer);
+
+
 
 CREATE OR REPLACE FUNCTION GET_CUSTOMER_JOBS(cust_id integer) RETURNS SETOF JOB_FULL_INFO
 AS $$
     BEGIN
         return query
-        select j.id, c.id, u.email, c.first_name, c.last_name, c.organisation_name, j.posted, j.header_ as job_header,
+        select j.id, j.status, c.id, u.email, c.first_name, c.last_name, c.organisation_name, j.posted, j.header_ as job_header,
                j.description, j.price, j.is_hourly_rate, COUNT_JOB_APPLICATIONS(j.id) as applications_count
         from new_job as j
             inner join customer as c on c.id = j.customer_id
@@ -16,6 +22,31 @@ AS $$
 $$ LANGUAGE plpgsql;
 
 
+CREATE OR REPLACE FUNCTION GET_CUSTOMER_NEW_JOBS(cust_id integer) RETURNS SETOF JOB_FULL_INFO
+AS $$
+    BEGIN
+        return query
+        select * from GET_CUSTOMER_JOBS(cust_id) as jobs where jobs.job_status = 'new';
+    END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION GET_CUSTOMER_IN_PROGRESS_JOBS(cust_id integer) RETURNS SETOF JOB_FULL_INFO
+AS $$
+    BEGIN
+        return query
+        select * from GET_CUSTOMER_JOBS(cust_id) as jobs where jobs.job_status = 'in progress';
+    END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION GET_CUSTOMER_DONE_JOBS(cust_id integer) RETURNS SETOF JOB_FULL_INFO
+AS $$
+    BEGIN
+        return query
+        select * from GET_CUSTOMER_JOBS(cust_id) as jobs where jobs.job_status = 'done';
+    END;
+$$ LANGUAGE plpgsql;
 
 
 CREATE OR REPLACE FUNCTION GET_CUSTOMER_APPLICATIONS(cust_id_p integer)
@@ -35,7 +66,7 @@ AS $$
             inner join new_job as j on app.job_id = j.id
             inner join customer as c on j.customer_id = c.id
             inner join freelancer as f on app.freelancer_id = f.id
-        where c.id = cust_id_p
+        where c.id = cust_id_p and j.status = 'new'
         order by app.date_time desc;
     END;
 $$ LANGUAGE plpgsql;

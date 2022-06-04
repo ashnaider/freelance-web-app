@@ -1,4 +1,4 @@
-{% extends 'customer/index.html' %}
+{% extends 'customer/my_jobs.html' %}
 
 {% block content %}
     <div class="content-section">
@@ -15,7 +15,7 @@
                 {% endif %}
 
             </p>
-            <div class="bi bi-cash">
+            <div class="bi bi-cash" style="color: green">
                 <img src="../../../static/img/cash.svg" alt="cash logo" height="25" width="25"/>
                 <i>{{ job.price }}$</i>
                 {% if job.is_hourly_rate %}
@@ -47,4 +47,13 @@
     {% endif %}
 
 
+    {#    <h3>hui 1</h3>#}
+    {#{% if applications_template %}#}
+    {#    <p>HUI?</p>#}
+    {#{% else %}#}
+    {#    <p>HUI ne?</p>#}
+    {#    {% block sidebar_block %}#}
+    {#    {% endblock %}#}
+    {#{% endif %}#}
 {% endblock %}
+

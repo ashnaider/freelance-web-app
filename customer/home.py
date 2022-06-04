@@ -86,10 +86,10 @@ def create_job():
     return redirect(url_for('auth.login'))
 
 
-def get_customer_jobs(cust_id):
+def get_customer_new_jobs(cust_id):
     g.cursor.execute(
         """
-        SELECT * FROM get_customer_jobs(%s); 
+        SELECT * FROM get_customer_new_jobs(%s);
         """,
         (cust_id,)
     )
@@ -97,14 +97,58 @@ def get_customer_jobs(cust_id):
 
     for job in jobs:
         job['price'] = psql_money_to_dec(job['price'])
-    return render_template('jobs.html', jobs=jobs)
+    return render_template('customer/jobs_new_template.html', jobs=jobs, jobs_title='New jobs')
 
 
-@customer.route('/my_jobs')
-def my_jobs():
+def get_customer_in_progress_jobs(cust_id):
+    g.cursor.execute(
+        """
+        SELECT * FROM get_customer_in_progress_jobs(%s);
+        """,
+        (cust_id,)
+    )
+    jobs = g.cursor.fetchall()
+
+    for job in jobs:
+        job['price'] = psql_money_to_dec(job['price'])
+    return render_template('customer/jobs_in_progress_template.html', jobs=jobs, jobs_title='Jobs in progress')
+
+
+def get_customer_done_jobs(cust_id):
+    g.cursor.execute(
+        """
+        SELECT * FROM get_customer_done_jobs(%s);
+        """,
+        (cust_id,)
+    )
+    jobs = g.cursor.fetchall()
+
+    for job in jobs:
+        job['price'] = psql_money_to_dec(job['price'])
+    return render_template('jobs.html', jobs=jobs, jobs_title='Finished jobs')
+
+
+@customer.route('/new_jobs')
+def new_jobs():
     if g.user:
-        jobs_template = get_customer_jobs(g.user['customer_id'])
-        return render_template('customer/index.html', jobs_template=jobs_template)
+        jobs_template = get_customer_new_jobs(g.user['customer_id'])
+        return render_template('customer/my_jobs.html', jobs_template=jobs_template)
+    return redirect(url_for('auth.login'))
+
+
+@customer.route('/jobs_in_progress')
+def in_progress_jobs():
+    if g.user:
+        jobs_template = get_customer_in_progress_jobs(g.user['customer_id'])
+        return render_template('customer/my_jobs.html', jobs_template=jobs_template)
+    return redirect(url_for('auth.login'))
+
+
+@customer.route('/done_jobs')
+def done_jobs():
+    if g.user:
+        jobs_template = get_customer_done_jobs(g.user['customer_id'])
+        return render_template('customer/my_jobs.html', jobs_template=jobs_template)
     return redirect(url_for('auth.login'))
 
 
@@ -218,11 +262,11 @@ def explore_job(job_id):
         if job_data:
             if job_data['customer_id'] == g.user['customer_id']:
                 job_apps = get_job_applications_data(g.user['customer_id'], job_id)
-                print("job_apps: ", job_apps)
                 job_apps_template = render_template('customer/applications_template.html', applications=job_apps)
                 return render_template('customer/concrete_job.html', job=job_data, applications_template=job_apps_template)
             else:
-                return render_template('customer/concrete_job.html', job=job_data)
+                return render_template('customer/foreign_job.html',
+                                       job_template=render_template('job_template.html', job=job_data))
 
         return redirect(url_for('jobs.get_jobs'))
 
@@ -272,11 +316,23 @@ def get_customer_app_template(cust_id, app_id):
     return render_template('customer/app_template.html', app=app_data)
 
 
-@customer.route('/application/<int:app_id>', methods=['GET', 'SET'])
+@customer.route('/application/<int:app_id>', methods=['GET', 'POST'])
 def concrete_application(app_id):
     if g.user:
         app_data = get_customer_app_data(g.user['customer_id'], app_id)
+        job_id = app_data['job_id']
+
+        if request.method == 'POST':
+            if request.form['submit'] == 'Accept':
+                g.cursor.execute(
+                    """
+                    UPDATE new_job SET application_id = %s, status = 'in progress' WHERE new_job.id = %s;
+                    """,
+                    (app_id, job_id)
+                )
+                g.db_conn.commit()
+
         app_template = render_template('customer/app_template.html', app=app_data)
-        job_data = get_job_data(app_data['job_id'])
+        job_data = get_job_data(job_id)
         return render_template('customer/app_concrete.html', app_template=app_template, job=job_data)
     return redirect('auth.login')

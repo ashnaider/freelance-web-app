@@ -1,0 +1,47 @@
+{% if jobs %}
+    <h3 class="article-title">
+        {% if jobs_title %}
+            {{ jobs_title }}
+        {% else %}
+            New jobs:
+        {% endif %}
+    </h3>
+    {% for job in jobs %}
+        <article class="content-section">
+
+            <div class="container">
+                <div class="row">
+                    <div class="col-10 float-left">
+                        <h4>
+                            <a class="article-title row"
+                               href="{{ url_for('customer.explore_job', job_id=job.job_id) }}">
+                                {{ job.job_header }}
+                            </a>
+                        </h4>
+                        <div class="row">
+                            <span class="text-muted">Posted {{ job.posted.strftime('%Y-%m-%d') }}</span>
+                            <p class="ml-2">Applications: {{ job.applications_count }}</p>
+                        </div>
+                        <div class="row">
+                            <a class="mr-2" href="">Author: {{ job.first_name|title }}</a>
+                        </div>
+                    </div>
+                    <div class="bi bi-cash float-right col-2">
+                        <img
+                                src="../static/img/cash.svg"
+                                alt="cash logo"
+                                height="25"
+                                width="25"/>
+
+                        <i>{{ job.price }}$</i>
+                        <div>
+                            {% if job.is_hourly_rate %}per hour{% else %}
+                                <div class="text-muted">for project</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </article>
+    {% endfor %}
+{% endif %}
