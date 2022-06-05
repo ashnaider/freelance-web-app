@@ -77,7 +77,6 @@ create table freelancer
     last_name             name_domain,
     resume_link           varchar(250),
     specialization        varchar(250),
-    jobs_done_count       integer default 0,
     unfinished_jobs_count integer default 0,
     job_id_working_on     integer,
     is_blocked            boolean default false,

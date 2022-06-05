@@ -27,9 +27,15 @@ def index():
 
 def get_freelancer(user_id):
     cursor = get_db_cursor()
+    # cursor.execute(
+    #     'SELECT email, role, first_name, last_name,  resume_link, specialization, is_blocked, f.id as freelancer_id '
+    #     'FROM freelancer AS f INNER JOIN users AS u ON f.user_id = u.id WHERE f.user_id = %s',
+    #     (user_id,)
+    # )
     cursor.execute(
-        'SELECT email, role, first_name, last_name,  resume_link, specialization, is_blocked, f.id as freelancer_id '
-        'FROM freelancer AS f INNER JOIN users AS u ON f.user_id = u.id WHERE f.user_id = %s',
+        """
+        select * from get_freelancer(user_id_p := %s);
+        """,
         (user_id,)
     )
     user = cursor.fetchone()
@@ -53,18 +59,18 @@ def load_logged_in_user():
         g.cursor = get_db_cursor()
 
 
-@freelancer.route('/search', methods=['GET'])
-def search():
-    try:
-        g.cursor.execute(
-            'SELECT * FROM new_job INNER JOIN customer AS c on new_job.customer_id = c.id'
-        )
-        new_jobs = g.cursor.fetchall()
-    except Exception as exc:
-        pass
-
-    print("new_jobs: ", new_jobs)
-    return render_template('freelancer/jobs.html', jobs=new_jobs)
+# @freelancer.route('/search', methods=['GET'])
+# def search():
+#     try:
+#         g.cursor.execute(
+#             'SELECT * FROM new_job INNER JOIN customer AS c on new_job.customer_id = c.id'
+#         )
+#         new_jobs = g.cursor.fetchall()
+#     except Exception as exc:
+#         pass
+#
+#     print("new_jobs: ", new_jobs)
+#     return render_template('freelancer/jobs.html', jobs=new_jobs)
 
 
 @freelancer.route('/edit_profile', methods=['GET', 'POST'])
@@ -79,13 +85,23 @@ def edit_profile():
             specialization = form.specialization.data
 
             try:
+                # g.cursor.execute(
+                #     """
+                #     UPDATE freelancer SET
+                #     first_name = %s, last_name = %s, resume_link = %s, specialization = %s
+                #     WHERE id = %s;
+                #     """,
+                #     (first_name, last_name, resume_link, specialization, g.user['freelancer_id'])
+                # )
                 g.cursor.execute(
                     """
-                    UPDATE freelancer SET
-                    first_name = %s, last_name = %s, resume_link = %s, specialization = %s
-                    WHERE id = %s;
+                    select * from edit_freelancer(fr_id_p := %s,
+                                                  first_name_p := %s,
+                                                  last_name_p := %s,
+                                                  resume_link_p := %s,
+                                                  specialization_p := %s);
                     """,
-                    (first_name, last_name, resume_link, specialization, g.user['freelancer_id'])
+                    (g.user['freelancer_id'], first_name, last_name, resume_link, specialization)
                 )
                 g.db_conn.commit()
             except Exception as e:
@@ -110,9 +126,15 @@ def is_application_exist(job_id, fr_id):
 
 
 def get_application(job_id, fr_id):
+    # g.cursor.execute(
+    #     """
+    #     SELECT * FROM application WHERE job_id = %s and freelancer_id = %s ;
+    #     """,
+    #     (job_id, fr_id)
+    # )
     g.cursor.execute(
         """
-        SELECT * FROM application WHERE job_id = %s and freelancer_id = %s ;
+        SELECT * FROM get_application( job_id_p := %s, fr_id_p := %s) ;
         """,
         (job_id, fr_id)
     )

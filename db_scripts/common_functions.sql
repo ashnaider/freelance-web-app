@@ -1,3 +1,4 @@
+drop function if exists get_application(job_id_p integer, fr_id_p integer);
 drop function if exists get_max_leaved_jobs_by_freelancer();
 DROP FUNCTION IF EXISTS IS_APPLICATION_EXIST(job_id_p integer, fr_id_p integer);
 DROP FUNCTION IF EXISTS COUNT_JOB_APPLICATIONS(job_id_p integer);
@@ -153,3 +154,11 @@ AS $$
 $$ LANGUAGE plpgsql;
 
 
+create or replace function get_application(job_id_p integer, fr_id_p integer)
+returns setof application
+as $$
+    begin
+        return query
+        select * from application where job_id = job_id_p and freelancer_id = fr_id_p;
+    end;
+$$ language plpgsql;
