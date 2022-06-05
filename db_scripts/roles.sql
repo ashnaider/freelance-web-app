@@ -1,16 +1,36 @@
+revoke usage on schema public from freelancer_user;
+
 DROP USER IF EXISTS freelancer_user;
 DROP USER IF EXISTS customer_user;
 DROP USER IF EXISTS guest_user;
 
 -------------- Freelancer User --------------
 CREATE USER freelancer_user WITH PASSWORD 'freelancer';
+GRANT USAGE ON SCHEMA public TO freelancer_user;
+
+--- Functions ---
+ALTER FUNCTION public.start_doing_job_by_freelancer(job_id_p integer, fr_id_p integer)
+SECURITY DEFINER SET search_path = public;
+
+ALTER FUNCTION public.apply_for_job_by_freelancer(job_id_p integer,
+                                                   fr_id_p integer,
+                                                   price_p float,
+                                                   description_p varchar(450))
+SECURITY DEFINER SET search_path = public;
+
+ALTER FUNCTION public.remove_job_application_by_freelancer(job_id_p integer, fr_id_p integer)
+SECURITY DEFINER SET search_path = public;
+
+alter function public.leave_job_by_freelancer(fr_id_p integer)
+security definer set search_path = public;
+
+
 --- Tables ---
 GRANT SELECT, UPDATE, DELETE ON freelancer TO freelancer_user;
 GRANT SELECT ON users TO freelancer_user;
 GRANT SELECT ON customer TO freelancer_user;
 GRANT SELECT ON new_job TO freelancer_user;
 GRANT SELECT, INSERT, DELETE ON application TO freelancer_user;
---- Procedures ---
 --- Sequences ---
 GRANT ALL ON SEQUENCE application_id_seq TO freelancer_user;
 
@@ -28,7 +48,6 @@ GRANT SELECT ON freelancer TO customer_user;
 GRANT USAGE, SELECT ON SEQUENCE new_job_id_seq TO customer_user;
 --- Procedures ---
 --- Functions ---
-REVOKE EXECUTE ON FUNCTION delete_job_applications_f() FROM customer_user;
 GRANT TRIGGER ON application TO customer_user;
 
 

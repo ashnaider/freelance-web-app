@@ -1,33 +1,49 @@
-{% extends 'customer/my_jobs.html' %}
+{% extends 'freelancer/index.html' %}
 
 {% block content %}
-    {% if job %}
+    {% if curr_job %}
         <div class="content-section">
             <form method="POST" action="">
-                {% if job %}
-                    <h2 class="article-title">{{ job.job_header }}</h2>
+                {% if curr_job %}
+                    <h2 class="article-title">{{ curr_job.job_header }}</h2>
                     <legend class="border-bottom mb-3">{{ legend }}</legend>
                     <p class="text-muted">
-                        posted: {{ job.posted.strftime('%Y-%m-%d %H:%M') }}
+                        posted: {{ curr_job.job_posted.strftime('%Y-%m-%d %H:%M') }}
                         <br>
-                        started: {{ job.started.strftime('%Y-%m-%d %H:%M') }}
+                        accepted: {{ curr_job.job_accepted.strftime('%Y-%m-%d %H:%M') }}
+                        <br>
+                        started:
+                        {% if curr_job.job_started %}
+                            <span style="color: green;">
+                            {{ curr_job.job_started.strftime('%Y-%m-%d %H:%M') }}
+                            </span>
+                        {% else %}
+                            <span style="color: red;">
+                            you didn't start job yet
+                            </span>
+                        {% endif %}
+
+                        {% if curr_job.job_status == 'unfinished' %}
+                            <br>
+                            <span style="color: red;">Job is unfinished.</span>
+                        {% endif %}
                     </p>
                     <legend class="border-bottom mb-3">{{ legend }}</legend>
                     <div class="bi bi-cash">
-                    Customer price:
+                        Customer price:
                         <img src="../../../static/img/cash.svg" alt="cash logo" height="25" width="25"/>
-                        <i>{{ job.price }}$</i>
-                        {% if job.is_hourly_rate %}
+                        <i>{{ curr_job.job_price }}$</i>
+                        {% if curr_job.is_hourly_rate %}
                             per hour
                         {% else %}
                             for project
                         {% endif %}
                     </div>
                     <div class="bi bi-cash">
-                    Freelancer price:
+                        Your price:
                         <img src="../../../static/img/cash.svg" alt="cash logo" height="25" width="25"/>
-                        <i>{{ application.app_price }}$</i>
-                        {% if job.is_hourly_rate %}
+                        <i>{{ curr_job.app_price }}$</i>
+                        {% if curr_job.is_hourly_rate %}
                             per hour
                         {% else %}
                             for project
@@ -36,39 +52,54 @@
                     <br>
                     <legend class="border-bottom mb-3">{{ legend }}</legend>
                     <h4>Job description:</h4>
-                    <p class="article-content">{{ job.description }}</p>
-                    <h4>Freelancer response:</h4>
-                    <p class="article-content">{{ application.app_description }}</p>
+                    <p class="article-content">{{ curr_job.job_description }}</p>
+                    <h4>Your response:</h4>
+                    <p class="article-content">{{ curr_job.app_description }}</p>
                     <legend class="border-bottom mb-3">{{ legend }}</legend>
-                    <p class="article-content">Customer: <a href=""> {{ customer.first_name|capitalize }} {{ customer.last_name|capitalize }} </a>
+                    <p class="article-content">Customer: <a
+                            href=""> {{ curr_job.cust_f_name|capitalize }} {{ curr_job.cust_l_name|capitalize }} </a>
                     </p>
-                    <p class="article-content">Customer e-mail: <i>{{ customer.fr_email }}</i></p>
+                    <p class="article-content">Customer e-mail: <i>{{ curr_job.cust_email }}</i></p>
                 {% endif %}
 
                 <div class="d-flex justify-content-between mt-5">
-                    <div class="d-flex flex-row">
+                    {% if curr_job.job_status == 'accepted' %}
+                        <div class="d-flex flex-row">
+                            <div class="form-group">
+                                <input
+                                        type="submit"
+                                        class="btn btn-outline-info float-left"
+                                        value="Start job"
+                                        name="submit">
+                            </div>
+                        </div>
                         <div class="form-group">
                             <input
                                     type="submit"
-                                    class="btn btn-outline-info"
-                                    value="Finish"
+                                    class="btn btn-outline-danger float-right"
+                                    value="Leave job"
                                     name="submit">
                         </div>
-{#                        <div class="form-group">#}
-{#                            <a href="{{ url_for('customer.explore_job', job_id=job.job_id) }}"#}
-{#                               type="submit"#}
-{#                               class="btn btn-outline-warning ml-4">#}
-{#                                Other applications#}
-{#                            </a>#}
-{#                        </div>#}
-                    </div>
-{#                    <div class="form-group">#}
-{#                        <input#}
-{#                                type="submit"#}
-{#                                class="btn btn-outline-danger "#}
-{#                                value="Complain to application"#}
-{#                                name="submit">#}
-{#                    </div>#}
+                    {% elif curr_job.job_status == 'in progress' %}
+                        <div class="d-flex flex-row">
+                            <div class="form-group">
+                                <input
+                                        type="submit"
+                                        class="btn btn-outline-info"
+                                        value="Finish job"
+                                        name="submit">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <input
+                                    type="submit"
+                                    class="btn btn-outline-danger "
+                                    value="Leave job"
+                                    name="submit">
+                        </div>
+                    {% elif curr_job.job_status == 'unfinished' %}
+                        <h3>You leaved this job.</h3>
+                    {% endif %}
                 </div>
             </form>
         </div>

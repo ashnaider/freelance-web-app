@@ -1,3 +1,10 @@
+drop function if exists edit_customer_profile(cust_id_p integer,
+                                                 first_name_p name_domain,
+                                                 last_name_p name_domain,
+                                                 organisation_name_p varchar(150));
+
+drop function if exists accept_application_for_job(app_id_p integer, job_id_p integer);
+
 DROP FUNCTION IF EXISTS GET_JOB_PERFORMER(cust_id_p integer, job_id_p integer);
 
 DROP FUNCTION IF EXISTS GET_CUSTOMER_NEW_JOBS(cust_id integer);
@@ -18,7 +25,7 @@ AS $$
     BEGIN
         return query
         select j.id, j.status, c.id, u.email, c.first_name, c.last_name, c.organisation_name,
-               j.posted, j.started, j.finished,
+               j.posted, j.accepted, j.started, j.finished,
                j.header_ as job_header,
                j.description, j.price, j.is_hourly_rate,
                j.application_id, COUNT_JOB_APPLICATIONS(j.id) as applications_count
@@ -54,7 +61,8 @@ CREATE OR REPLACE FUNCTION GET_CUSTOMER_IN_PROGRESS_JOBS(cust_id integer) RETURN
 AS $$
     BEGIN
         return query
-        select * from GET_CUSTOMER_JOBS(cust_id) as jobs where jobs.job_status = 'in progress';
+        select * from GET_CUSTOMER_JOBS(cust_id) as jobs
+        where jobs.job_status = 'in progress' or jobs.job_status = 'accepted';
     END;
 $$ LANGUAGE plpgsql;
 
@@ -118,3 +126,50 @@ AS $$
 $$ LANGUAGE plpgsql;
 
 
+create or replace function accept_application_for_job(app_id_p integer, job_id_p integer)
+returns integer
+as $$
+    begin
+        update new_job set application_id = app_id_p, status = 'accepted', accepted = CURRENT_TIMESTAMP
+        where new_job.id = job_id_p;
+
+        update application set status = 'accepted' where id = app_id_p;
+
+        return 1;
+    end;
+$$ language plpgsql;
+
+
+create or replace function delete_other_applications_for_job(job_id_p integer)
+returns integer
+as $$
+    declare
+        job_app_id_t integer;
+    begin
+        select into job_app_id_t application_id from new_job where id = job_id_p;
+
+        if job_app_id_t is null then
+            raise exception 'Unable to delete other job applications, because job does not have accepted application';
+        end if;
+
+        delete from application where job_id = job_id_p and id <> job_app_id_t and status = 'new';
+
+        return 1;
+    end;
+$$ language plpgsql;
+
+
+create or replace function edit_customer_profile(cust_id_p integer,
+                                                 first_name_p name_domain,
+                                                 last_name_p name_domain,
+                                                 organisation_name_p varchar(150))
+returns integer
+as $$
+    begin
+        update customer set first_name = first_name_p,
+                            last_name = last_name_p,
+                            organisation_name = organisation_name_p
+        where id = cust_id_p;
+        return 1;
+    end;
+$$ language plpgsql;

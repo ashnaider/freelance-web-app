@@ -7,6 +7,9 @@
 {% block left_menu %}
     <a class="nav-item nav-link" href="{{ url_for('freelancer.index') }}">Jobs</a>
     <a class="nav-item nav-link" href="{{ url_for('freelancer.get_applied_jobs') }}">Applications</a>
+    <a class="nav-item nav-link" href="">Customers</a>
+    <a class="nav-item nav-link" href="">Freelancers</a>
+
 {% endblock %}
 
 
@@ -19,8 +22,41 @@
 {#{% endblock %}#}
 
 {% block content %}
-    {% if jobs_template %}
-        {{ jobs_template|safe }}
+    {% if g.user and g.user.role == 'freelancer' and g.user.is_blocked == false %}
+        {% if jobs_template %}
+            {{ jobs_template|safe }}
+        {% endif %}
+    {% else %}
+        <h2>You are blocked, sorry.</h2>
     {% endif %}
+{% endblock %}
+
+
+{% block sidebar_block %}
+    <div class="col-md-4">
+        <div class="content-section">
+            <h3>Go to</h3>
+            {#            <p class='text-muted'>You can put any information here you'd like.#}
+            <ul class="list-group">
+                {#                <div class="form-group">#}
+                {#                    <a href="{{ url_for('customer.my_jobs') }}"#}
+                {#                       type="submit"#}
+                {#                       class="btn btn-outline-warning">#}
+                {#                        Other applications#}
+                {#                    </a>#}
+                {#                </div>#}
+                <a href="{{ url_for('freelancer.index') }}">
+                    <li class="list-group-item">New jobs</li>
+                </a>
+                <a href="{{ url_for('freelancer.get_curr_job_in_progress') }}">
+                    <li class="list-group-item">Curr job in progress</li>
+                </a>
+                <a href="">
+                    <li class="list-group-item">Finished jobs</li>
+                </a>
+            </ul>
+            </p>
+        </div>
+    </div>
 {% endblock %}
 

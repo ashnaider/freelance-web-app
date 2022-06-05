@@ -125,7 +125,7 @@ def get_customer_done_jobs(cust_id):
 
     for job in jobs:
         job['price'] = psql_money_to_dec(job['price'])
-    return render_template('jobs.html', jobs=jobs, jobs_title='Finished jobs')
+    return render_template('customer/jobs_done_template.html', jobs=jobs, jobs_title='Finished jobs')
 
 
 @customer.route('/new_jobs')
@@ -219,13 +219,22 @@ def edit_profile():
             organisation_name = form.organisation_name.data
 
             try:
+                # g.cursor.execute(
+                #     """
+                #     UPDATE customer SET
+                #     first_name = %s, last_name = %s, organisation_name = %s
+                #     WHERE id = %s;
+                #     """,
+                #     (first_name, last_name, organisation_name, g.user['customer_id'])
+                # )
                 g.cursor.execute(
                     """
-                    UPDATE customer SET
-                    first_name = %s, last_name = %s, organisation_name = %s
-                    WHERE id = %s;
+                    select * from edit_customer_profile(cust_id_p :=  %s, 
+                                                        first_name_p := %s, 
+                                                        last_name_p := %s, 
+                                                        organisation_name_p := %s);
                     """,
-                    (first_name, last_name, organisation_name, g.user['customer_id'])
+                    (g.user['customer_id'], first_name, last_name, organisation_name)
                 )
                 g.db_conn.commit()
             except Exception as e:
@@ -298,7 +307,7 @@ def explore_job(job_id):
                     return render_template('customer/concrete_job.html', job=job_data,
                                            applications_template=job_apps_template)
 
-                elif status == 'in progress':
+                elif status == 'in progress' or status == 'accepted':
                     print('exploring job in progress')
                     print('customer_id: ', g.user['customer_id'])
                     print('job_id: ', job_data['job_id'])
@@ -308,7 +317,10 @@ def explore_job(job_id):
                                            performer_data=performer_data)
 
                 elif status == 'done':
-                    pass
+                    performer_data = get_job_performer_data(g.user['customer_id'], job_data['job_id'])
+                    return render_template('customer/job_finished.html',
+                                           job=job_data,
+                                           performer_data=performer_data)
             else:
                 return render_template('customer/foreign_job.html',
                                        job_template=render_template('job_template.html', job=job_data))
@@ -371,8 +383,7 @@ def concrete_application(app_id):
             if request.form['submit'] == 'Accept':
                 g.cursor.execute(
                     """
-                    UPDATE new_job SET application_id = %s, status = 'in progress', started = CURRENT_TIMESTAMP  
-                    WHERE new_job.id = %s;
+                    select * from accept_application_for_job(%s, %s);
                     """,
                     (app_id, job_id)
                 )

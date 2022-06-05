@@ -1,5 +1,5 @@
 <h3 class="article-title ml-3">
-    My new jobs:
+    My finished jobs:
     {% if jobs %}
         {{ jobs|length }}
     {% else %}
@@ -21,7 +21,6 @@
                         </h4>
                         <div class="row">
                             <span class="text-muted">Posted {{ job.posted.strftime('%Y-%m-%d') }}</span>
-                            <p class="ml-2">Applications: {{ job.applications_count }}</p>
                         </div>
                         <div class="row">
                             <a class="mr-2" href="">Author: {{ job.first_name|title }}</a>

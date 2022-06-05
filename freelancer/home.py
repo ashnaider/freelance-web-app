@@ -134,17 +134,17 @@ def apply_job(job_id):
         application = get_application(job_id, fr_id)
 
         if request.method == 'POST':
-            if request.form['submit'] == 'Cancel application' and application:
+            if request.form['submit'] == 'Remove application' and application:
                 try:
                     g.cursor.execute(
                         """
-                        DELETE FROM application WHERE job_id = %s and freelancer_id = %s
+                        select * from remove_job_application_by_freelancer(%s, %s) ;
                         """,
                         (job_id, fr_id)
                     )
                     g.db_conn.commit()
                 except Exception as e:
-                    flash(str(e), 'danger')
+                    flash(crop_psql_error(str(e)), 'danger')
 
             application = None
 
@@ -155,32 +155,19 @@ def apply_job(job_id):
                 try:
                     g.cursor.execute(
                         """
-                        INSERT INTO application (price, description, freelancer_id, job_id)
-                        VALUES (%s, %s, %s, %s);
+                        select * from apply_for_job_by_freelancer(%s, %s, %s, %s) ;
                         """,
-                        (price, description, fr_id, job_id)
+                        (job_id, fr_id, price, description)
                     )
                     g.db_conn.commit()
                     print("After insertion into application")
                 except Exception as e:
-                    flash(str(e), 'danger')
+                    print(str(e))
+                    flash(crop_psql_error(str(e)), 'danger')
                 else:
                     application = get_application(job_id, fr_id)
                     load_logged_in_user()
                     job_template = get_job_template(job_id)
-
-            if request.form['submit'] == 'Start':
-                try:
-                    g.cursor.execute(
-                        """
-                        DELETE FROM application WHERE job_id = %s and freelancer_id = %s
-                        """,
-                        (job_id, fr_id)
-                    )
-                    g.db_conn.commit()
-                except Exception as e:
-                    flash(str(e), 'danger')
-
 
         return render_template('freelancer/job_application.html',
                                job_template=job_template,
@@ -212,3 +199,86 @@ def get_applied_jobs():
         return render_template('freelancer/applications.html', jobs_template=jobs_template)
     return redirect(url_for('auth.login'))
 
+
+def get_job_freelancer_is_working_on(fr_id):
+    g.cursor.execute(
+        """
+        SELECT * FROM get_job_freelancer_working_on(%s) ;
+        """,
+        (fr_id,)
+    )
+    curr_job = g.cursor.fetchone()
+    if curr_job:
+        curr_job['job_price'] = psql_money_to_dec(curr_job['job_price'])
+        curr_job['app_price'] = psql_money_to_dec(curr_job['app_price'])
+
+    return curr_job
+
+
+@freelancer.route('/curr_job_in_progress', methods=['GET', 'POST'])
+def get_curr_job_in_progress():
+    if g.user:
+        curr_job = get_job_freelancer_is_working_on(g.user['freelancer_id'])
+
+        if request.method == 'POST':
+
+            if request.form['submit'] == 'Start job':
+                try:
+                    g.cursor.execute(
+                        """
+                        select * from start_doing_job_by_freelancer(%s, %s) ;
+                        """,
+                        (curr_job['job_id'], g.user['freelancer_id'])
+                    )
+                    g.db_conn.commit()
+                except Exception as e:
+                    print(str(e))
+                    flash(crop_psql_error(str(e)), 'danger')
+                else:
+                    flash("You started doing this job!", 'success')
+
+            elif request.form['submit'] == 'Finish job':
+                try:
+                    print("before finish_doung_job_by_freelancer execution")
+                    g.cursor.execute(
+                        """
+                        select * from finish_doing_job_by_freelancer(%s);
+                        """,
+                        (g.user['freelancer_id'])
+                    )
+                    print("after exec")
+                    g.db_conn.commit()
+                    print("after commit")
+                except Exception as e:
+                    print(f"Exception: {str(e)}")
+                    flash(crop_psql_error(str(e)), 'danger')
+                else:
+                    flash(f"Congrats! You finished this job!", 'success')
+                    curr_job['job_status'] = 'finished'
+                    return render_template('freelancer/job_in_progress.html', curr_job=curr_job)
+
+            elif request.form['submit'] == 'Leave job':
+                try:
+                    print("try to leave job")
+                    g.cursor.execute(
+                        """
+                        select * from leave_job_by_freelancer(%s);
+                        """,
+                        (g.user['freelancer_id'])
+                    )
+                    g.db_conn.commit()
+                    print("job leaved. ok.")
+                    attempts_to_leave_left = g.cursor.fetchone()
+                except Exception as e:
+                    print(str(e))
+                    flash(crop_psql_error(str(e)), 'danger')
+                else:
+                    flash(f"You leaved this job. You can leave {attempts_to_leave_left[0]} times before get blocked!",
+                          'warning')
+                    curr_job['job_status'] = 'unfinished'
+                    return render_template('freelancer/job_in_progress.html', curr_job=curr_job)
+
+            curr_job = get_job_freelancer_is_working_on(g.user['freelancer_id'])
+
+        return render_template('freelancer/job_in_progress.html', curr_job=curr_job)
+    return redirect(url_for('auth.login'))
