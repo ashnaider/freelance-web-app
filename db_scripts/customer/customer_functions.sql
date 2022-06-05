@@ -1,3 +1,18 @@
+drop function if exists get_customer(user_id_p integer);
+
+drop function if exists create_job(cust_id_p integer,
+                                      header_p varchar(250),
+                                      description_p varchar(650),
+                                      price_p float,
+                                      is_hourly_rate_p boolean);
+
+drop function if exists update_job(job_id_p integer,
+                                      header_p varchar(250),
+                                      description_p varchar(650),
+                                      price_p float,
+                                      is_hourly_rate_p boolean);
+
+drop function if exists delete_job(job_id_p integer);
 drop function if exists edit_customer_profile(cust_id_p integer,
                                                  first_name_p name_domain,
                                                  last_name_p name_domain,
@@ -171,5 +186,68 @@ as $$
                             organisation_name = organisation_name_p
         where id = cust_id_p;
         return 1;
+    end;
+$$ language plpgsql;
+
+
+create or replace function delete_job(job_id_p integer)
+returns integer
+as $$
+    begin
+        delete from new_job where id = job_id_p;
+
+        return 1;
+    end;
+$$ language plpgsql;
+
+
+create or replace function update_job(job_id_p integer,
+                                      header_p varchar(250),
+                                      description_p varchar(650),
+                                      price_p float,
+                                      is_hourly_rate_p boolean)
+returns integer
+as $$
+    begin
+        update new_job set header_ = header_p,
+                           description = description_p,
+                           price = price_p::float8::numeric::money,
+                           is_hourly_rate = is_hourly_rate_p
+        where id = job_id_p ;
+
+        return 1;
+    end;
+$$ language plpgsql;
+
+
+create or replace function create_job(cust_id_p integer,
+                                      header_p varchar(250),
+                                      description_p varchar(650),
+                                      price_p float,
+                                      is_hourly_rate_p boolean)
+returns integer
+as $$
+    begin
+        insert into new_job (customer_id, header_, description, price, is_hourly_rate)
+        values (cust_id_p, header_p, description_p, price_p::float8::numeric::money, is_hourly_rate_p);
+
+        return 1;
+    end;
+$$ language plpgsql;
+
+
+create or replace function get_customer(user_id_p integer)
+returns table (customer_id integer,
+               email email_domain,
+               role user_role,
+               first_name name_domain,
+               last_name name_domain,
+               organisation_name varchar(150),
+               is_blocked boolean)
+as $$
+    begin
+        return query
+        select c.id as customer_id, u.email, u.role, c.first_name, c.last_name, c.organisation_name, c.is_blocked
+        from customer as c inner join users as u on c.user_id = u.id where user_id = user_id_p;
     end;
 $$ language plpgsql;

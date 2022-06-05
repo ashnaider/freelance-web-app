@@ -27,9 +27,15 @@ def index():
 
 def get_customer(user_id):
     cur = get_db_cursor()
+    # cur.execute(
+    #     'SELECT email, role, first_name, last_name, organisation_name, is_blocked, c.id as customer_id  '
+    #     'FROM customer AS c INNER JOIN users AS u ON c.user_id = u.id WHERE user_id = %s',
+    #     (user_id,)
+    # )
     cur.execute(
-        'SELECT email, role, first_name, last_name, organisation_name, is_blocked, c.id as customer_id  '
-        'FROM customer AS c INNER JOIN users AS u ON c.user_id = u.id WHERE user_id = %s',
+        """
+        select * from get_customer(%s);
+        """,
         (user_id,)
     )
     user = cur.fetchone()
@@ -62,18 +68,29 @@ def create_job():
             header = form.title.data
             description = form.description.data
             price = float(form.price.data)
-            hourly_rate = True if request.form.get("hourly_rate") else False
+            is_hourly_rate = True if request.form.get("hourly_rate") else False
             # deadline = form.deadline.data
             # deadline_str = str(deadline) + ' 12:00:00-00'
             customer_id = g.user['customer_id']
             print("In create job: ")
             try:
+                # g.cursor.execute(
+                #     "INSERT INTO new_job (customer_id, header_, description, price, is_hourly_rate) "
+                #     "VALUES (%s, %s, %s, %s, %s);",
+                #     (customer_id, header, description, price, hourly_rate),
+                # )
                 g.cursor.execute(
-                    "INSERT INTO new_job (customer_id, header_, description, price, is_hourly_rate) "
-                    "VALUES (%s, %s, %s, %s, %s);",
-                    (customer_id, header, description, price, hourly_rate),
+                    """
+                    select * from create_job(cust_id_p := %s,
+                                             header_p := %s,
+                                             description_p := %s,
+                                             price_p := %s,
+                                             is_hourly_rate_p := %s );
+                    """,
+                    (customer_id, header, description, price, is_hourly_rate)
                 )
                 g.db_conn.commit()
+                print("after job created")
             except Exception as e:
                 flash(e, 'danger')
 
@@ -159,9 +176,15 @@ def edit_job(job_id):
         if request.method == 'POST':
             if request.form['submit'] == 'Delete':
                 try:
+                    # g.cursor.execute(
+                    #     """
+                    #     DELETE FROM new_job WHERE id = %s;
+                    #     """,
+                    #     (job_id,)
+                    # )
                     g.cursor.execute(
                         """
-                        DELETE FROM new_job WHERE id = %s;
+                        select * from delete_job(%s);
                         """,
                         (job_id,)
                     )
@@ -181,12 +204,22 @@ def edit_job(job_id):
 
                 try:
                     print("Before updating job")
+                    # g.cursor.execute(
+                    #     """
+                    #     UPDATE new_job SET header_ = %s, description = %s, price = %s, is_hourly_rate = %s
+                    #     WHERE id = %s ;
+                    #     """,
+                    #     (header, description, price, is_hourly_rate, job_id)
+                    # )
                     g.cursor.execute(
                         """
-                        UPDATE new_job SET header_ = %s, description = %s, price = %s, is_hourly_rate = %s
-                        WHERE id = %s ;
+                        select * from update_job(job_id_p := %s,
+                                                 header_p := %s,
+                                                 description_p := %s,
+                                                 price_p := %s,
+                                                 is_hourly_rate_p := %s );
                         """,
-                        (header, description, price, is_hourly_rate, job_id)
+                        (job_id, header,  description, price, is_hourly_rate)
                     )
                     g.db_conn.commit()
                     print("After updating job")
