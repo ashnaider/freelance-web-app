@@ -128,8 +128,8 @@ def get_unfinished_job_data(job_id):
 
 
 def get_unfinished_job_template(job_id):
-    finished_job_data = get_finished_job_data(job_id)
-    return render_template('job_done_template.html', job=finished_job_data)
+    unfinished_job_data = get_unfinished_job_data(job_id)
+    return render_template('job_done_template.html', job=unfinished_job_data)
 
 
 

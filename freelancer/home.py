@@ -342,7 +342,10 @@ def get_finished_jobs():
 
 @freelancer.route('/explore_unfinished_job/<int:job_id>')
 def explore_unfinished_job(job_id):
-    pass
+    if g.user:
+        unfinished_job_template = get_unfinished_job_template(job_id)
+        return render_template('freelancer/job_unfinished.html', job_template=unfinished_job_template)
+    return redirect(url_for('auth.login'))
 
 
 @freelancer.route('/explore_finished_job/<int:job_id>')

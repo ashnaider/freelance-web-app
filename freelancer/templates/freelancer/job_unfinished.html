@@ -1,0 +1,9 @@
+{% extends "freelancer/index.html" %}
+
+
+{% block content %}
+    {% if job_template %}
+        {{ job_template|safe }}
+    {% endif %}
+{% endblock %}
+

@@ -208,7 +208,7 @@ begin
             unfinished_jobs_count = (unfinished_jobs_count + 1)
         where id = fr_id_p;
 
-        update new_job set status = 'unfinished', application_id = null where id = job_id_t;
+        update new_job set status = 'unfinished' where id = job_id_t;
     else
         raise exception 'Freelancer is not working on this job!';
     end if;

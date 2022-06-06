@@ -340,25 +340,35 @@ def explore_job(job_id):
                     if request.method == 'POST':
                         if request.form['submit'] == 'Stop job':
                             try:
-                                # g.cursor.execute(
-                                #     """
-                                #     select * from create_job();
-                                #     """,
-                                #     (,)
-                                # )
+                                print("before leave job by customer")
+                                g.cursor.execute(
+                                    """
+                                    select * from leave_job_by_customer(job_id_p := %s);
+                                    """,
+                                    (job_id,)
+                                )
+                                print("after leave job by customer")
                                 g.db_conn.commit()
+                                attempts_to_leave_left = '???'
+                                attempts_to_leave_left = g.cursor.fetchone()
+                                attempts_to_leave_left = attempts_to_leave_left[0] if attempts_to_leave_left else '?'
                             except Exception as e:
                                 flash(crop_psql_error(str(e)), 'danger')
                             else:
-                                pass
+                                flash(f'You stopped this job. Now you have {attempts_to_leave_left} attempts to stop jobs.',
+                                      'warning')
 
                     performer_data = get_job_performer_data(g.user['customer_id'], job_data['job_id'])
                     return render_template('customer/job_in_progress.html',
                                            job=job_data,
                                            performer_data=performer_data)
 
-                elif status == 'done' or status == 'unfinished':
+                elif status == 'done':
                     finished_job_template = get_finished_job_template(job_id)
+                    return render_template('customer/job_finished.html', job_template=finished_job_template)
+
+                elif status == 'unfinished':
+                    finished_job_template = get_unfinished_job_template(job_id)
                     return render_template('customer/job_finished.html', job_template=finished_job_template)
             else:
                 return render_template('customer/foreign_job.html',
@@ -436,9 +446,3 @@ def concrete_application(app_id):
     return redirect('auth.login')
 
 
-@customer.route('/explore_finished_job/<int:job_id>')
-def explore_finished_job(job_id):
-    if g.user:
-        finished_job_template = get_finished_job_template(job_id)
-        return render_template('customer/job_finished.html', job_template=finished_job_template)
-    return redirect('auth.login')

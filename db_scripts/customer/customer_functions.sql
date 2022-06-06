@@ -1,3 +1,4 @@
+drop function if exists get_max_leaved_jobs_by_customer();
 drop function if exists delete_new_jobs_of_customer(cust_id_p integer);
 drop function if exists leave_job_by_customer(job_id_p integer);
 drop function if exists get_customer(user_id_p integer);
@@ -271,21 +272,35 @@ as
 $$
     declare
         cust_id_t integer;
+        leave_attempts_left integer;
+        job_status_t project_status;
     begin
-        --- Change job status ---
-        update new_job set status = 'unfinished'
-        where id = job_id_p;
-
-        --- Freeing freelancer from this job ---
-        update freelancer set job_id_working_on = null where job_id_working_on = job_id_p;
-
-        --- Getting customer of this job ---
         select into cust_id_t customer_id from new_job where id = job_id_p;
 
-        --- Decreasing unfinished jobs counter by one ---
-        update customer set unfinished_jobs_count = unfinished_jobs_count - 1 where id = cust_id_t;
+        select into leave_attempts_left get_max_leaved_jobs_by_customer() - unfinished_jobs_count
+        from customer
+        where id = cust_id_t;
 
-        return 1;
+        select into job_status_t status from new_job where id = job_id_p;
+
+        if (job_status_t = 'accepted') or (job_status_t = 'in progress') then
+            --- Change job status ---
+            update new_job set status = 'unfinished'
+            where id = job_id_p;
+
+            --- Freeing freelancer from this job ---
+            update freelancer set job_id_working_on = null where job_id_working_on = job_id_p;
+
+            --- Getting customer of this job ---
+            select into cust_id_t customer_id from new_job where id = job_id_p;
+
+            --- Decreasing unfinished jobs counter by one ---
+            update customer set unfinished_jobs_count = unfinished_jobs_count + 1 where id = cust_id_t;
+
+            return leave_attempts_left - 1;
+        end if;
+
+        return leave_attempts_left;
     end;
 $$ language plpgsql;
 
@@ -298,5 +313,13 @@ $$
         delete from new_job where customer_id = cust_id_p and status = 'new';
 
         return 1;
+    end;
+$$ language plpgsql;
+
+
+create or replace function get_max_leaved_jobs_by_customer() returns integer
+as $$
+    begin
+        return 2;
     end;
 $$ language plpgsql;
