@@ -7,6 +7,47 @@ from flask import current_app, g
 from flask.cli import with_appcontext
 
 
+# def get_db_conn():
+#     if 'db_conn' not in g:
+#         if 'user' in g:
+#             role = g.user['role']
+#         else:
+#             role = 'guest'
+#         print("Getting new role for user ", role)
+#
+#         if role == 'admin':
+#             g.db_conn = psycopg2.connect(
+#                 dbname=current_app.config['DATABASE'],
+#                 user=current_app.config['ADMIN_USER'],
+#                 password=current_app.config['ADMIN_PASSWORD'],
+#                 host='localhost'
+#             )
+#         elif role == 'guest':
+#             g.db_conn = psycopg2.connect(
+#                 dbname=current_app.config['DATABASE'],
+#                 user=current_app.config['GUEST_USER'],
+#                 password=current_app.config['GUEST_PASSWORD'],
+#                 host='localhost'
+#             )
+#         elif role == 'freelancer':
+#             g.db_conn = psycopg2.connect(
+#                 dbname=current_app.config['DATABASE'],
+#                 user=current_app.config['FREELANCER_USER'],
+#                 password=current_app.config['FREELANCER_PASSWORD'],
+#                 host='localhost'
+#             )
+#         elif role == 'customer':
+#             g.db_conn = psycopg2.connect(
+#                 dbname=current_app.config['DATABASE'],
+#                 user=current_app.config['CUSTOMER_USER'],
+#                 password=current_app.config['CUSTOMER_PASSWORD'],
+#                 host='localhost'
+#             )
+#     else:
+#         print("db_conn in g")
+#
+#     return g.db_conn
+
 def get_db_conn():
     if 'db_conn' not in g:
         if 'user' in g:

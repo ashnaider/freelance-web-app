@@ -51,8 +51,11 @@
                 <a href="{{ url_for('freelancer.get_curr_job_in_progress') }}">
                     <li class="list-group-item">Curr job in progress</li>
                 </a>
-                <a href="">
+                <a href="{{ url_for('freelancer.get_finished_jobs') }}">
                     <li class="list-group-item">Finished jobs</li>
+                </a>
+                <a href="{{ url_for('freelancer.get_unfinished_jobs') }}">
+                    <li class="list-group-item">Unfinished jobs</li>
                 </a>
             </ul>
             </p>

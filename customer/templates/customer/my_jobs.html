@@ -27,7 +27,10 @@
                     <li class="list-group-item">Jobs in progress</li>
                 </a>
                 <a href="{{ url_for('customer.done_jobs') }}">
-                    <li class="list-group-item">Done jobs</li>
+                    <li class="list-group-item">Finished jobs</li>
+                </a>
+                <a href="{{ url_for('customer.unfinished_jobs') }}">
+                    <li class="list-group-item">Unfinished jobs</li>
                 </a>
             </ul>
             </p>

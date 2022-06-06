@@ -2,7 +2,7 @@ from flask import Blueprint, flash, g, redirect, render_template, request, sessi
 from db import *
 
 from forms import FreelancerProfileForm, JobApplication
-from jobs import get_jobs_template, get_job_template
+from jobs import *
 
 from utils import *
 
@@ -32,6 +32,7 @@ def get_freelancer(user_id):
     #     'FROM freelancer AS f INNER JOIN users AS u ON f.user_id = u.id WHERE f.user_id = %s',
     #     (user_id,)
     # )
+    print(g.user['role'])
     cursor.execute(
         """
         select * from get_freelancer(user_id_p := %s);
@@ -85,14 +86,6 @@ def edit_profile():
             specialization = form.specialization.data
 
             try:
-                # g.cursor.execute(
-                #     """
-                #     UPDATE freelancer SET
-                #     first_name = %s, last_name = %s, resume_link = %s, specialization = %s
-                #     WHERE id = %s;
-                #     """,
-                #     (first_name, last_name, resume_link, specialization, g.user['freelancer_id'])
-                # )
                 g.cursor.execute(
                     """
                     select * from edit_freelancer(fr_id_p := %s,
@@ -126,12 +119,6 @@ def is_application_exist(job_id, fr_id):
 
 
 def get_application(job_id, fr_id):
-    # g.cursor.execute(
-    #     """
-    #     SELECT * FROM application WHERE job_id = %s and freelancer_id = %s ;
-    #     """,
-    #     (job_id, fr_id)
-    # )
     g.cursor.execute(
         """
         SELECT * FROM get_application( job_id_p := %s, fr_id_p := %s) ;
@@ -248,9 +235,9 @@ def get_curr_job_in_progress():
                 try:
                     g.cursor.execute(
                         """
-                        select * from start_doing_job_by_freelancer(%s, %s) ;
+                        select * from start_doing_job_by_freelancer(%s) ;
                         """,
-                        (curr_job['job_id'], g.user['freelancer_id'])
+                        (g.user['freelancer_id'],)
                     )
                     g.db_conn.commit()
                 except Exception as e:
@@ -266,7 +253,7 @@ def get_curr_job_in_progress():
                         """
                         select * from finish_doing_job_by_freelancer(%s);
                         """,
-                        (g.user['freelancer_id'])
+                        (g.user['freelancer_id'],)
                     )
                     print("after exec")
                     g.db_conn.commit()
@@ -286,7 +273,7 @@ def get_curr_job_in_progress():
                         """
                         select * from leave_job_by_freelancer(%s);
                         """,
-                        (g.user['freelancer_id'])
+                        (g.user['freelancer_id'],)
                     )
                     g.db_conn.commit()
                     print("job leaved. ok.")
@@ -303,4 +290,64 @@ def get_curr_job_in_progress():
             curr_job = get_job_freelancer_is_working_on(g.user['freelancer_id'])
 
         return render_template('freelancer/job_in_progress.html', curr_job=curr_job)
+    return redirect(url_for('auth.login'))
+
+
+def get_freelancer_unfinished_jobs(fr_id):
+    g.cursor.execute(
+        """
+        select * from get_freelancer_unfinished_jobs(%s);
+        """,
+        (fr_id,)
+    )
+    unfinished_jobs = g.cursor.fetchall()
+
+    for job in unfinished_jobs:
+        job['job_price'] = psql_money_to_dec(job['job_price'])
+        job['app_price'] = psql_money_to_dec(job['app_price'])
+    return unfinished_jobs
+
+
+@freelancer.route('/unfinished_jobs')
+def get_unfinished_jobs():
+    if g.user:
+        unfinished_jobs = get_freelancer_unfinished_jobs(g.user['freelancer_id'])
+        return render_template('freelancer/jobs_unfinished.html', jobs=unfinished_jobs)
+    return redirect(url_for('auth.login'))
+
+
+def get_freelancer_finished_jobs(fr_id):
+    g.cursor.execute(
+        """
+        select * from get_freelancer_finished_jobs(%s);
+        """,
+        (fr_id,)
+    )
+    finished_jobs = g.cursor.fetchall()
+
+    for job in finished_jobs:
+        job['job_price'] = psql_money_to_dec(job['job_price'])
+        job['app_price'] = psql_money_to_dec(job['app_price'])
+    return finished_jobs
+
+
+@freelancer.route('/finished_jobs')
+def get_finished_jobs():
+    if g.user:
+        finished_jobs = get_freelancer_finished_jobs(g.user['freelancer_id'])
+        return render_template('freelancer/jobs_finished.html', jobs=finished_jobs)
+    return redirect(url_for('auth.login'))
+
+
+
+@freelancer.route('/explore_unfinished_job/<int:job_id>')
+def explore_unfinished_job(job_id):
+    pass
+
+
+@freelancer.route('/explore_finished_job/<int:job_id>')
+def explore_finished_job(job_id):
+    if g.user:
+        finished_job_template = get_finished_job_template(job_id)
+        return render_template('freelancer/job_finished.html', job_template=finished_job_template)
     return redirect(url_for('auth.login'))

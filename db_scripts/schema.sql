@@ -1,6 +1,3 @@
-drop trigger if exists DELETE_JOB_APPLICATIONS on new_job;
-drop function if exists DELETE_JOB_APPLICATIONS_F();
-
 drop trigger if exists CHECK_POSTED_NEW_JOB ON new_job;
 drop function if exists CHECK_POSTED_NEW_JOB_F();
 
@@ -17,6 +14,8 @@ drop table if exists user_complaint;
 drop type if exists complaint_type;
 
 drop table if exists message_;
+
+drop function if exists get_application(job_id_p integer, fr_id_p integer);
 
 drop table if exists application;
 drop table if exists new_job;
@@ -79,6 +78,7 @@ create table freelancer
     specialization        varchar(250),
     unfinished_jobs_count integer default 0,
     job_id_working_on     integer,
+    started_doing_job     boolean default false,
     is_blocked            boolean default false,
 
     unique (id, user_id)
@@ -115,6 +115,7 @@ create table customer
     first_name        name_domain,
     last_name         name_domain,
     organisation_name varchar(150),
+    unfinished_jobs_count integer default 0,
     is_blocked        boolean default false,
 
     unique (id, user_id)
@@ -205,26 +206,6 @@ CREATE TRIGGER CHECK_POSTED_NEW_JOB_ON_UPDATE
     FOR EACH ROW
 EXECUTE PROCEDURE CHECK_POSTED_NEW_JOB_ON_UPDATE_F();
 
-
-CREATE OR REPLACE FUNCTION DELETE_JOB_APPLICATIONS_F() RETURNS TRIGGER
-    LANGUAGE PLPGSQL
-AS
-$$
-BEGIN
-    if old.status = 'new' then
-        delete from application where job_id = OLD.id;
-    else
-        raise exception E'Unable to delete job, because it\'s already in progress';
-    end if;
-    return OLD;
-END
-$$;
-
-CREATE TRIGGER DELETE_JOB_APPLICATIONS
-    BEFORE DELETE
-    ON new_job
-    FOR EACH ROW
-EXECUTE PROCEDURE DELETE_JOB_APPLICATIONS_F();
 
 --
 -- create type complaint_type as enum (

@@ -1,3 +1,5 @@
+drop function if exists delete_new_jobs_of_customer(cust_id_p integer);
+drop function if exists leave_job_by_customer(job_id_p integer);
 drop function if exists get_customer(user_id_p integer);
 
 drop function if exists create_job(cust_id_p integer,
@@ -25,6 +27,7 @@ DROP FUNCTION IF EXISTS GET_JOB_PERFORMER(cust_id_p integer, job_id_p integer);
 DROP FUNCTION IF EXISTS GET_CUSTOMER_NEW_JOBS(cust_id integer);
 DROP FUNCTION IF EXISTS GET_CUSTOMER_IN_PROGRESS_JOBS(cust_id integer);
 DROP FUNCTION IF EXISTS GET_CUSTOMER_DONE_JOBS(cust_id integer);
+DROP FUNCTION IF EXISTS GET_CUSTOMER_UNFINISHED_JOBS(cust_id integer);
 
 DROP FUNCTION IF EXISTS GET_ACTIVE_CUSTOMER_APPLICATIONS(cust_id integer);
 DROP FUNCTION IF EXISTS GET_ALL_CUSTOMER_APPLICATIONS(cust_id_p integer);
@@ -87,6 +90,15 @@ AS $$
     BEGIN
         return query
         select * from GET_CUSTOMER_JOBS(cust_id) as jobs where jobs.job_status = 'done';
+    END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION GET_CUSTOMER_UNFINISHED_JOBS(cust_id integer) RETURNS SETOF JOB_FULL_INFO
+AS $$
+    BEGIN
+        return query
+        select * from GET_CUSTOMER_JOBS(cust_id) as jobs where jobs.job_status = 'unfinished';
     END;
 $$ LANGUAGE plpgsql;
 
@@ -249,5 +261,42 @@ as $$
         return query
         select c.id as customer_id, u.email, u.role, c.first_name, c.last_name, c.organisation_name, c.is_blocked
         from customer as c inner join users as u on c.user_id = u.id where user_id = user_id_p;
+    end;
+$$ language plpgsql;
+
+
+create or replace function leave_job_by_customer(job_id_p integer)
+returns integer
+as
+$$
+    declare
+        cust_id_t integer;
+    begin
+        --- Change job status ---
+        update new_job set status = 'unfinished'
+        where id = job_id_p;
+
+        --- Freeing freelancer from this job ---
+        update freelancer set job_id_working_on = null where job_id_working_on = job_id_p;
+
+        --- Getting customer of this job ---
+        select into cust_id_t customer_id from new_job where id = job_id_p;
+
+        --- Decreasing unfinished jobs counter by one ---
+        update customer set unfinished_jobs_count = unfinished_jobs_count - 1 where id = cust_id_t;
+
+        return 1;
+    end;
+$$ language plpgsql;
+
+
+create or replace function delete_new_jobs_of_customer(cust_id_p integer)
+returns integer
+as
+$$
+    begin
+        delete from new_job where customer_id = cust_id_p and status = 'new';
+
+        return 1;
     end;
 $$ language plpgsql;

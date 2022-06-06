@@ -103,6 +103,13 @@
                 </div>
             </form>
         </div>
+    {% else %}
+        <h3>You don't have any job to do.</h3>
+        <br>
+        <a href="{{ url_for('freelancer.index') }}">Search for new jobs</a>
+        <br>
+        <br>
+        <a href="{{ url_for('freelancer.get_applied_jobs') }}">View your applications</a>
     {% endif %}
 {% endblock %}
 

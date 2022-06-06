@@ -89,3 +89,47 @@ def get_job(job_id):
 
     return redirect(url_for('jobs.get_jobs'))
 
+
+def get_finished_job_data(job_id):
+    g.cursor.execute(
+        """
+        select * from get_done_job_full_info(job_id_p :=  %s, job_status_p := %s);
+        """,
+        (job_id, 'done')
+    )
+    finished_job = g.cursor.fetchone()
+
+    if finished_job:
+        finished_job['job_price'] = psql_money_to_dec(finished_job['job_price'])
+        finished_job['app_price'] = psql_money_to_dec(finished_job['app_price'])
+
+    return finished_job
+
+
+def get_finished_job_template(job_id):
+    finished_job_data = get_finished_job_data(job_id)
+    return render_template('job_done_template.html', job=finished_job_data)
+
+
+def get_unfinished_job_data(job_id):
+    g.cursor.execute(
+        """
+        select * from get_done_job_full_info(job_id_p :=  %s, job_status_p := %s);
+        """,
+        (job_id, 'unfinished')
+    )
+    unfinished_job = g.cursor.fetchone()
+
+    if unfinished_job:
+        unfinished_job['job_price'] = psql_money_to_dec(unfinished_job['job_price'])
+        unfinished_job['app_price'] = psql_money_to_dec(unfinished_job['app_price'])
+
+    return unfinished_job
+
+
+def get_unfinished_job_template(job_id):
+    finished_job_data = get_finished_job_data(job_id)
+    return render_template('job_done_template.html', job=finished_job_data)
+
+
+

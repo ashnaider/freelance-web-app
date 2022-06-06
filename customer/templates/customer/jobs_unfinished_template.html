@@ -1,5 +1,5 @@
 <h3 class="article-title ml-3">
-    My finished jobs:
+    My unfinished jobs:
     {% if jobs %}
         {{ jobs|length }}
     {% else %}
@@ -15,15 +15,20 @@
                     <div class="col-10 float-left">
                         <h4>
                             <a class="article-title row"
-                               href="{{ url_for('customer.explore_finished_job', job_id=job.job_id) }}">
+                               href="{{ url_for('customer.explore_job', job_id=job.job_id) }}">
                                 {{ job.job_header }}
                             </a>
                         </h4>
                         <div class="row">
-                            <span class="text-muted">Posted {{ job.posted.strftime('%Y-%m-%d') }}</span>
+                            <span class="text-muted">Accepted {{ job.job_accepted.strftime('%Y-%m-%d') }}</span>
                         </div>
                         <div class="row">
-                            <a class="mr-2" href="">Author: {{ job.first_name|title }}</a>
+                            <span class="text-muted">Finished <span>job was stopped.</span></span>
+                        </div>
+                        <br>
+                        <div class="row">
+                            <a class="mr-2"
+                               href="">Author: {{ job.cust_f_name|title ~ ' ' ~ job.cust_l_name|title }}</a>
                         </div>
                     </div>
                     <div class="bi bi-cash float-right col-2">
@@ -33,7 +38,7 @@
                                 height="25"
                                 width="25"/>
 
-                        <i>{{ job.price }}$</i>
+                        <i>{{ job.app_price }}$</i>
                         <div>
                             {% if job.is_hourly_rate %}per hour{% else %}
                                 <div class="text-muted">for project</div>

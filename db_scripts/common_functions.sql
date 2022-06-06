@@ -1,3 +1,4 @@
+drop function if exists get_done_job_full_info(job_id_p integer, job_status_p project_status);
 drop function if exists get_application(job_id_p integer, fr_id_p integer);
 drop function if exists get_max_leaved_jobs_by_freelancer();
 DROP FUNCTION IF EXISTS IS_APPLICATION_EXIST(job_id_p integer, fr_id_p integer);
@@ -160,5 +161,48 @@ as $$
     begin
         return query
         select * from application where job_id = job_id_p and freelancer_id = fr_id_p;
+    end;
+$$ language plpgsql;
+
+
+create or replace function get_done_job_full_info(job_id_p integer, job_status_p project_status default 'done')
+returns table (
+    job_id integer,
+    job_posted timestamp,
+    job_accepted       timestamp,
+    job_started        timestamp,
+    job_finished       timestamp,
+    job_header        varchar(250),
+    job_description    varchar(650),
+    job_price money,
+    is_hourly_rate boolean,
+    job_status project_status,
+    app_id integer,
+    app_description varchar(450),
+    app_price money,
+    app_status application_status,
+    fr_id integer,
+    fr_f_name name_domain,
+    fr_l_name name_domain,
+    fr_email email_domain,
+    cust_id integer,
+    cust_f_name name_domain,
+    cust_l_name name_domain,
+    cust_email email_domain)
+as $$
+    begin
+        return query
+        select
+               j.id, j.posted, j.accepted, j.started, j.finished,
+               j.header_, j.description, j.price, j.is_hourly_rate, j.status,
+               a.id, a.description, a.price, a.status, f.id, f.first_name, f.last_name, uf.email,
+               c.id, c.first_name, c.last_name, uc.email
+        from new_job as j
+        inner join application a on a.id = j.application_id
+        inner join freelancer f on a.freelancer_id = f.id
+        inner join customer c on j.customer_id = c.id
+        inner join users uc on c.user_id = uc.id
+        inner join users uf on f.user_id = uf.id
+        where job_id_p = j.id and j.status = job_status_p;
     end;
 $$ language plpgsql;

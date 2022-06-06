@@ -46,7 +46,6 @@ def get_customer(user_id):
 
 @customer.before_request
 def load_logged_in_user():
-
     if 'cursor' in g:
         close_cursor(g.cursor)
     close_db()
@@ -74,11 +73,6 @@ def create_job():
             customer_id = g.user['customer_id']
             print("In create job: ")
             try:
-                # g.cursor.execute(
-                #     "INSERT INTO new_job (customer_id, header_, description, price, is_hourly_rate) "
-                #     "VALUES (%s, %s, %s, %s, %s);",
-                #     (customer_id, header, description, price, hourly_rate),
-                # )
                 g.cursor.execute(
                     """
                     select * from create_job(cust_id_p := %s,
@@ -145,6 +139,20 @@ def get_customer_done_jobs(cust_id):
     return render_template('customer/jobs_done_template.html', jobs=jobs, jobs_title='Finished jobs')
 
 
+def get_customer_unfinished_jobs(cust_id):
+    g.cursor.execute(
+        """
+        SELECT * FROM get_customer_unfinished_jobs(%s);
+        """,
+        (cust_id,)
+    )
+    jobs = g.cursor.fetchall()
+
+    for job in jobs:
+        job['price'] = psql_money_to_dec(job['price'])
+    return render_template('customer/jobs_unfinished_template.html', jobs=jobs, jobs_title='Unfinished jobs')
+
+
 @customer.route('/new_jobs')
 def new_jobs():
     if g.user:
@@ -169,6 +177,14 @@ def done_jobs():
     return redirect(url_for('auth.login'))
 
 
+@customer.route('/unfinished_jobs')
+def unfinished_jobs():
+    if g.user:
+        jobs_template = get_customer_unfinished_jobs(g.user['customer_id'])
+        return render_template('customer/my_jobs.html', jobs_template=jobs_template)
+    return redirect(url_for('auth.login'))
+
+
 @customer.route('/edit_job/<int:job_id>', methods=['GET', 'POST'])
 def edit_job(job_id):
     if g.user:
@@ -176,12 +192,6 @@ def edit_job(job_id):
         if request.method == 'POST':
             if request.form['submit'] == 'Delete':
                 try:
-                    # g.cursor.execute(
-                    #     """
-                    #     DELETE FROM new_job WHERE id = %s;
-                    #     """,
-                    #     (job_id,)
-                    # )
                     g.cursor.execute(
                         """
                         select * from delete_job(%s);
@@ -204,13 +214,6 @@ def edit_job(job_id):
 
                 try:
                     print("Before updating job")
-                    # g.cursor.execute(
-                    #     """
-                    #     UPDATE new_job SET header_ = %s, description = %s, price = %s, is_hourly_rate = %s
-                    #     WHERE id = %s ;
-                    #     """,
-                    #     (header, description, price, is_hourly_rate, job_id)
-                    # )
                     g.cursor.execute(
                         """
                         select * from update_job(job_id_p := %s,
@@ -252,14 +255,6 @@ def edit_profile():
             organisation_name = form.organisation_name.data
 
             try:
-                # g.cursor.execute(
-                #     """
-                #     UPDATE customer SET
-                #     first_name = %s, last_name = %s, organisation_name = %s
-                #     WHERE id = %s;
-                #     """,
-                #     (first_name, last_name, organisation_name, g.user['customer_id'])
-                # )
                 g.cursor.execute(
                     """
                     select * from edit_customer_profile(cust_id_p :=  %s, 
@@ -326,7 +321,7 @@ def get_job_performer_data(cust_id, job_id):
     return performer_data
 
 
-@customer.route('/job/<int:job_id>')
+@customer.route('/job/<int:job_id>', methods=['GET', 'POST'])
 def explore_job(job_id):
     if g.user:
         job_data = get_job_data(job_id)
@@ -341,19 +336,30 @@ def explore_job(job_id):
                                            applications_template=job_apps_template)
 
                 elif status == 'in progress' or status == 'accepted':
-                    print('exploring job in progress')
-                    print('customer_id: ', g.user['customer_id'])
-                    print('job_id: ', job_data['job_id'])
+
+                    if request.method == 'POST':
+                        if request.form['submit'] == 'Stop job':
+                            try:
+                                # g.cursor.execute(
+                                #     """
+                                #     select * from create_job();
+                                #     """,
+                                #     (,)
+                                # )
+                                g.db_conn.commit()
+                            except Exception as e:
+                                flash(crop_psql_error(str(e)), 'danger')
+                            else:
+                                pass
+
                     performer_data = get_job_performer_data(g.user['customer_id'], job_data['job_id'])
                     return render_template('customer/job_in_progress.html',
                                            job=job_data,
                                            performer_data=performer_data)
 
-                elif status == 'done':
-                    performer_data = get_job_performer_data(g.user['customer_id'], job_data['job_id'])
-                    return render_template('customer/job_finished.html',
-                                           job=job_data,
-                                           performer_data=performer_data)
+                elif status == 'done' or status == 'unfinished':
+                    finished_job_template = get_finished_job_template(job_id)
+                    return render_template('customer/job_finished.html', job_template=finished_job_template)
             else:
                 return render_template('customer/foreign_job.html',
                                        job_template=render_template('job_template.html', job=job_data))
@@ -427,4 +433,12 @@ def concrete_application(app_id):
         app_template = render_template('customer/app_template.html', app=app_data)
         job_data = get_active_job_data(job_id)
         return render_template('customer/app_concrete.html', app_template=app_template, job=job_data)
+    return redirect('auth.login')
+
+
+@customer.route('/explore_finished_job/<int:job_id>')
+def explore_finished_job(job_id):
+    if g.user:
+        finished_job_template = get_finished_job_template(job_id)
+        return render_template('customer/job_finished.html', job_template=finished_job_template)
     return redirect('auth.login')
