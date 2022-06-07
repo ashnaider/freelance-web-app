@@ -375,7 +375,12 @@ def explore_job(job_id):
                             except Exception as e:
                                 flash(crop_psql_error(str(e)), 'danger')
                             else:
-                                flash(f'You stopped this job. Now you have {attempts_to_leave_left} attempts to stop jobs.',
+                                if attempts_to_leave_left == 0:
+                                    flash('You have spent all your attempts to stop jobs. You are blocked now.', 'danger')
+                                elif attempts_to_leave_left < 0:
+                                    flash('You stopped this job. You are still blocked.')
+                                else:
+                                    flash(f'You stopped this job. Now you can stop jobs {attempts_to_leave_left} more times, before you get blocked.',
                                       'warning')
 
                     performer_data = get_job_performer_data(g.user['customer_id'], job_data['job_id'])

@@ -77,10 +77,10 @@ def login():
         password = form.password.data
 
         g.cursor.execute(
-            'SELECT * FROM users WHERE email = %s', (email,)
+            'SELECT * FROM get_user_by_email(%s);',
+            (email,)
         )
         user = g.cursor.fetchone()
-
         close_cursor(g.cursor)
         close_db()
 
@@ -97,6 +97,8 @@ def login():
                 return redirect(url_for('freelancer.index'))
             elif 'customer' == user['role']:
                 return redirect(url_for('customer.index'))
+            elif 'admin' == user['role']:
+                return redirect(url_for('admin.index'))
 
     return render_template('login.html', form=form)
 

@@ -1,3 +1,6 @@
+drop function if exists get_user_by_id(user_id_p integer);
+drop function if exists get_user_by_email(user_email_p email_domain);
+
 drop function if exists get_done_job_full_info(job_id_p integer, job_status_p project_status);
 drop function if exists get_application(job_id_p integer, fr_id_p integer);
 drop function if exists get_max_leaved_jobs_by_freelancer();
@@ -204,5 +207,27 @@ as $$
         inner join users uc on c.user_id = uc.id
         inner join users uf on f.user_id = uf.id
         where job_id_p = j.id and j.status = job_status_p;
+    end;
+$$ language plpgsql;
+
+
+create or replace function get_user_by_id(user_id_p integer)
+returns setof users
+as
+$$
+    begin
+        return query
+        select * from users where id = user_id_p;
+    end;
+$$ language plpgsql;
+
+
+create or replace function get_user_by_email(user_email_p email_domain)
+returns setof users
+as
+$$
+    begin
+        return query
+        select * from users where email = user_email_p;
     end;
 $$ language plpgsql;

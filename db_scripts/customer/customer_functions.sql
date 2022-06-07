@@ -1,10 +1,10 @@
-drop type if exists job_with_app_and_users;
-
 drop function if exists get_customer_unfinished_jobs(cust_id_p integer);
 drop function if exists get_customer_done_jobs(cust_id_p integer);
 drop function if exists get_customer_in_progress_jobs(cust_id_p integer);
 DROP FUNCTION IF EXISTS GET_CUSTOMER_NEW_JOBS(cust_id integer);
 drop function if exists get_customer_jobs_with_app_and_users(cust_id_p integer);
+
+drop type if exists job_with_app_and_users;
 
 drop function if exists get_max_leaved_jobs_by_customer();
 drop function if exists delete_new_jobs_of_customer(cust_id_p integer);
@@ -92,6 +92,7 @@ as (
                 job_started     timestamp,
                 job_finished    timestamp,
                 job_price       money,
+                job_is_blocked  boolean,
                 is_hourly_rate  boolean,
                 app_id          integer,
                 app_description varchar(450),
@@ -116,7 +117,8 @@ $$
     begin
         return query
         select
-        j.id, j.header_, j.description, j.status, j.posted, j.accepted, j.started, j.finished, j.price, j.is_hourly_rate,
+        j.id, j.header_, j.description, j.status,
+        j.posted, j.accepted, j.started, j.finished, j.price, j.is_blocked, j.is_hourly_rate,
         a.id, a.description, a.price, c.id, c.first_name, c.last_name, u.email, c.is_blocked,
         f.id, f.first_name, f.last_name, u2.email, f.is_blocked
         from application as a
@@ -166,7 +168,7 @@ $$ language plpgsql;
 
 CREATE TYPE CUSTOMER_APPLICATION
 AS (app_id integer, app_description varchar(450), app_time timestamp, app_price money,
-    job_id integer, job_status project_status,
+    job_id integer, job_status project_status, job_is_blocked boolean,
     job_header varchar(250), job_description varchar(650), job_price money,
     cust_f_name name_domain, cust_l_name name_domain, cust_id integer, cust_blocked boolean,
     fr_f_name name_domain, fr_l_name name_domain, fr_id integer, fr_email email_domain, fr_blocked boolean);
@@ -179,7 +181,7 @@ AS $$
         return query
         select
             app.id, app.description, app.date_time, app.price,
-            j.id, j.status, j.header_, j.description, j.price,
+            j.id, j.status, j.is_blocked, j.header_, j.description, j.price,
             c.first_name, c.last_name, c.id, c.is_blocked,
             f.first_name, f.last_name, f.id, u.email, f.is_blocked
         from application as app
@@ -342,7 +344,7 @@ $$
         where id = cust_id_t;
 
         select into job_status_t status from new_job where id = job_id_p;
-
+--
         if (job_status_t = 'accepted') or (job_status_t = 'in progress') then
             --- Change job status ---
             update new_job set status = 'unfinished'
@@ -354,7 +356,7 @@ $$
             --- Getting customer of this job ---
             select into cust_id_t customer_id from new_job where id = job_id_p;
 
-            --- Decreasing unfinished jobs counter by one ---
+            --- Increasing unfinished jobs counter by one ---
             update customer set unfinished_jobs_count = unfinished_jobs_count + 1 where id = cust_id_t;
 
             return leave_attempts_left - 1;

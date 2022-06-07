@@ -135,6 +135,16 @@ GRANT ALL ON SEQUENCE customer_id_seq TO guest_user;
 GRANT ALL ON SEQUENCE freelancer_id_seq TO guest_user;
 
 
+CREATE USER admin_user WITH PASSWORD 'admin';
+--- Tables ---
+GRANT ALL ON users TO admin_user;
+GRANT ALL ON new_job TO admin_user;
+GRANT ALL ON application TO admin_user;
+GRANT ALL ON customer TO admin_user;
+GRANT ALL ON freelancer TO admin_user;
+
+
+
 
 
 

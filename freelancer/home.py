@@ -27,11 +27,6 @@ def index():
 
 def get_freelancer(user_id):
     cursor = get_db_cursor()
-    # cursor.execute(
-    #     'SELECT email, role, first_name, last_name,  resume_link, specialization, is_blocked, f.id as freelancer_id '
-    #     'FROM freelancer AS f INNER JOIN users AS u ON f.user_id = u.id WHERE f.user_id = %s',
-    #     (user_id,)
-    # )
     print(g.user['role'])
     cursor.execute(
         """

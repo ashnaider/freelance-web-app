@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block header_block %}
+    <title>Admin</title>
+    {% block media_block %}{% endblock %}
+{% endblock %}
+
+{% block left_menu %}
+    <a class="nav-item nav-link" href="{{ url_for('admin.index') }}">Jobs</a>
+    <a class="nav-item nav-link" href="">Blocked jobs</a>
+
+    <a class="nav-item nav-link ml-4" href="">Freelancers</a>
+    <a class="nav-item nav-link" href="">Blocked freelancers</a>
+
+    <a class="nav-item nav-link ml-4" href="">Customers</a>
+    <a class="nav-item nav-link" href="">Blocked freelancers</a>
+{% endblock %}
+
+{#{% block user_buttons %}#}
+{#    <a class="nav-item nav-link" href="{{ url_for('customer.create_job') }}">Add job</a>#}
+{#    <a class="nav-item nav-link" href="{{ url_for('customer.my_jobs') }}">My jobs</a>#}
+{#    <a class="nav-item nav-link" href="">Edit Profile</a>#}
+{#{% endblock %}#}
+
+{% block user_greetings %}
+    {% if g.user %}
+    {% else %}
+        User NOT logged
+        <a href="{{ url_for('auth.login') }}">Log In</a>
+    {% endif %}
+
+{% endblock %}
+
+{% block content %}
+    {% if jobs_template %}
+        {{ jobs_template|safe }}
+    {% endif %}
+{% endblock %}
+
+
+{% block sidebar_block %}
+{% endblock %}

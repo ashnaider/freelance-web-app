@@ -5,6 +5,7 @@ from flask import Flask, render_template, g
 from auth import auth
 from freelancer.home import freelancer
 from customer.home import customer
+from admin.home import admin
 from jobs import jobs, get_jobs_template
 from db import *
 
@@ -16,8 +17,8 @@ def create_app(test_config=None):
         SECRET_KEY='dev',
         DATABASE='freelancer-db',
 
-        ADMIN_USER='postgres',
-        ADMIN_PASSWORD='postgres',
+        ADMIN_USER='admin_user',
+        ADMIN_PASSWORD='admin',
 
         FREELANCER_USER='freelancer_user',
         FREELANCER_PASSWORD='freelancer',
@@ -55,6 +56,7 @@ def create_app(test_config=None):
 
 
     app.register_blueprint(auth)
+    app.register_blueprint(admin)
     app.register_blueprint(freelancer)
     app.register_blueprint(customer)
     app.register_blueprint(jobs)

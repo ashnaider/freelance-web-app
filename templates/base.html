@@ -36,13 +36,13 @@
                     {% if g.user %}
                         {% if g.user['role'] == 'customer' %}
                             <a class="nav-item nav-link" href="{{ url_for('customer.create_job') }}">Add job</a>
-
                             <a class="nav-item nav-link" href="{{ url_for('customer.edit_profile') }}">Edit Profile</a>
                             <a class="nav-item nav-link" href="{{ url_for('auth.logout') }}">Logout</a>
-                        {% endif %}
-                        {% if g.user['role'] == 'freelancer' %}
+                        {% elif g.user['role'] == 'freelancer' %}
                             <a class="nav-item nav-link" href="{{ url_for('freelancer.edit_profile') }}">Edit
                                 Profile</a>
+                            <a class="nav-item nav-link" href="{{ url_for('auth.logout') }}">Logout</a>
+                        {% elif g.user['role'] == 'admin' %}
                             <a class="nav-item nav-link" href="{{ url_for('auth.logout') }}">Logout</a>
                         {% endif %}
                     {% else %}

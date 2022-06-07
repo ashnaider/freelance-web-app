@@ -65,3 +65,16 @@ revoke ALL ON SEQUENCE freelancer_id_seq from guest_user;
 revoke all on function get_active_jobs() from guest_user;
 
 DROP USER IF EXISTS guest_user;
+
+
+--- Delete admin_user ---
+
+REVOKE ALL ON users FROM admin_user;
+REVOKE ALL ON new_job FROM admin_user;
+REVOKE ALL ON application FROM admin_user;
+REVOKE ALL ON customer FROM admin_user;
+REVOKE ALL ON freelancer FROM admin_user;
+
+
+DROP USER IF EXISTS admin_user;
+

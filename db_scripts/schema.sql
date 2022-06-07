@@ -68,6 +68,11 @@ create table users
     role   user_role    not null
 );
 
+insert into users (email, passwd, role)
+values ('admin@gmail.com',
+        'pbkdf2:sha256:260000$Xy8f3Gdyh68fKtTb$9d7044b13c649c217bbff9e33ef389faba3a67fc04943bf878401a08298450ba',
+        'admin');
+
 create table freelancer
 (
     id                    serial not null primary key,

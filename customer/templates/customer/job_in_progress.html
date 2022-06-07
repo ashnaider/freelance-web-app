@@ -25,7 +25,7 @@
                     </p>
                     <legend class="border-bottom mb-3">{{ legend }}</legend>
                     <div class="bi bi-cash">
-                    Customer price:
+                        Customer price:
                         <img src="../../../static/img/cash.svg" alt="cash logo" height="25" width="25"/>
                         <i>{{ job.price }}$</i>
                         {% if job.is_hourly_rate %}
@@ -35,7 +35,7 @@
                         {% endif %}
                     </div>
                     <div class="bi bi-cash">
-                    Freelancer price:
+                        Freelancer price:
                         <img src="../../../static/img/cash.svg" alt="cash logo" height="25" width="25"/>
                         <i>{{ performer_data.app_price }}$</i>
                         {% if job.is_hourly_rate %}
@@ -51,36 +51,38 @@
                     <h4>Freelancer response:</h4>
                     <p class="article-content">{{ performer_data.app_description }}</p>
                     <legend class="border-bottom mb-3">{{ legend }}</legend>
-                    <p class="article-content">Freelancer: <a href=""> {{ performer_data.fr_f_name|capitalize }} {{ performer_data.fr_l_name|capitalize }} </a>
+                    <p class="article-content">Freelancer: <a
+                            href=""> {{ performer_data.fr_f_name|capitalize }} {{ performer_data.fr_l_name|capitalize }} </a>
                     </p>
                     <p class="article-content">Freelancer e-mail: <i>{{ performer_data.fr_email }}</i></p>
                 {% endif %}
-
-                <div class="d-flex justify-content-between mt-5">
-                    <div class="d-flex flex-row">
-                        <div class="form-group">
-                            <input
-                                    type="submit"
-                                    class="btn btn-outline-danger"
-                                    value="Stop job"
-                                    name="submit">
+                {% if performer_data.job_is_blocked == False %}
+                    <div class="d-flex justify-content-between mt-5">
+                        <div class="d-flex flex-row">
+                            <div class="form-group">
+                                <input
+                                        type="submit"
+                                        class="btn btn-outline-danger"
+                                        value="Stop job"
+                                        name="submit">
+                            </div>
+                            {#                        <div class="form-group">#}
+                            {#                            <a href="{{ url_for('customer.explore_job', job_id=job.job_id) }}"#}
+                            {#                               type="submit"#}
+                            {#                               class="btn btn-outline-warning ml-4">#}
+                            {#                                Other applications#}
+                            {#                            </a>#}
+                            {#                        </div>#}
                         </div>
-{#                        <div class="form-group">#}
-{#                            <a href="{{ url_for('customer.explore_job', job_id=job.job_id) }}"#}
-{#                               type="submit"#}
-{#                               class="btn btn-outline-warning ml-4">#}
-{#                                Other applications#}
-{#                            </a>#}
-{#                        </div>#}
+                        {#                    <div class="form-group">#}
+                        {#                        <input#}
+                        {#                                type="submit"#}
+                        {#                                class="btn btn-outline-danger "#}
+                        {#                                value="Complain to application"#}
+                        {#                                name="submit">#}
+                        {#                    </div>#}
                     </div>
-{#                    <div class="form-group">#}
-{#                        <input#}
-{#                                type="submit"#}
-{#                                class="btn btn-outline-danger "#}
-{#                                value="Complain to application"#}
-{#                                name="submit">#}
-{#                    </div>#}
-                </div>
+                {% endif %}
             </form>
         </div>
     {% endif %}
