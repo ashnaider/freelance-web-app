@@ -1,5 +1,14 @@
+DROP TRIGGER IF EXISTS CHECK_IF_CUSTOMER_CAN_CREATE_NEW_JOB_F ON new_job;
+DROP FUNCTION IF EXISTS CHECK_IF_CUSTOMER_CAN_CREATE_NEW_JOB_F();
+
+DROP TRIGGER IF EXISTS DELETE_APPLICATIONS_WHEN_JOB_BLOCKED ON new_job;
+DROP FUNCTION IF EXISTS DELETE_APPLICATIONS_WHEN_JOB_BLOCKED_F();
+
 DROP TRIGGER IF EXISTS DELETE_APPLICATIONS_DEPENDING_ON_JOB ON new_job;
 DROP FUNCTION IF EXISTS DELETE_APPLICATIONS_DEPENDING_ON_JOB_F();
+
+DROP TRIGGER IF EXISTS UNBLOCK_CUSTOMER on customer;
+DROP FUNCTION IF EXISTS UNBLOCK_CUSTOMER_F();
 
 DROP TRIGGER IF EXISTS BLOCK_CUSTOMER_WHEN_MANY_UNFINISHED_JOBS on customer;
 DROP FUNCTION IF EXISTS BLOCK_CUSTOMER_WHEN_MANY_UNFINISHED_JOBS_F();
@@ -44,7 +53,7 @@ AS $$
     BEGIN
         if new.unfinished_jobs_count >= get_max_leaved_jobs_by_freelancer() then
             new.is_blocked = true;
-            perform delete_new_jobs_of_customer(new.id);
+            update new_job set is_blocked = true where customer_id = new.id;
         end if;
 
         return new;
@@ -57,13 +66,29 @@ CREATE TRIGGER BLOCK_CUSTOMER_WHEN_MANY_UNFINISHED_JOBS
     EXECUTE PROCEDURE BLOCK_CUSTOMER_WHEN_MANY_UNFINISHED_JOBS_F();
 
 
+CREATE OR REPLACE FUNCTION UNBLOCK_CUSTOMER_F() RETURNS TRIGGER
+    LANGUAGE PLPGSQL
+AS $$
+    BEGIN
+        if new.is_blocked = false then
+            update new_job set is_blocked = false where customer_id = new.id;
+        end if;
+
+        return new;
+    END
+$$;
+
+CREATE TRIGGER UNBLOCK_CUSTOMER
+    BEFORE UPDATE OR INSERT ON customer
+    FOR EACH ROW
+    EXECUTE PROCEDURE UNBLOCK_CUSTOMER_F();
+
+
 CREATE OR REPLACE FUNCTION DELETE_APPLICATIONS_DEPENDING_ON_JOB_F() RETURNS TRIGGER
     LANGUAGE PLPGSQL
 AS $$
     BEGIN
         delete from application where job_id = old.id;
-
-        return new;
     END
 $$;
 
@@ -71,3 +96,42 @@ CREATE TRIGGER DELETE_APPLICATIONS_DEPENDING_ON_JOB
     BEFORE DELETE ON new_job
     FOR EACH ROW
     EXECUTE PROCEDURE DELETE_APPLICATIONS_DEPENDING_ON_JOB_F();
+
+
+CREATE OR REPLACE FUNCTION DELETE_APPLICATIONS_WHEN_JOB_BLOCKED_F() RETURNS TRIGGER
+    LANGUAGE PLPGSQL
+AS $$
+    BEGIN
+        if new.is_blocked = true then
+            delete from application where job_id = new.id;
+        end if;
+
+        return new;
+    END
+$$;
+
+CREATE TRIGGER DELETE_APPLICATIONS_WHEN_JOB_BLOCKED
+    BEFORE UPDATE ON new_job
+    FOR EACH ROW
+    EXECUTE PROCEDURE DELETE_APPLICATIONS_WHEN_JOB_BLOCKED_F();
+
+
+CREATE OR REPLACE FUNCTION CHECK_IF_CUSTOMER_CAN_CREATE_NEW_JOB_F() RETURNS TRIGGER
+    LANGUAGE PLPGSQL
+AS $$
+    DECLARE
+        customer_id_blocked_t boolean;
+    BEGIN
+        select into customer_id_blocked_t is_blocked from customer where id = new.customer_id;
+        if customer_id_blocked_t then
+            raise exception 'Unable to create new job. You are blocked!';
+        end if;
+
+        return new;
+    END
+$$;
+
+CREATE TRIGGER CHECK_IF_CUSTOMER_CAN_CREATE_NEW_JOB_F
+    BEFORE INSERT ON new_job
+    FOR EACH ROW
+    EXECUTE PROCEDURE CHECK_IF_CUSTOMER_CAN_CREATE_NEW_JOB_F();

@@ -27,8 +27,12 @@
 {% endblock %}
 
 {% block content %}
+    {% if g.user.is_blocked == True %}
+        <h3>Sorry, you can't view new jobs, because you are blocked.</h3>
+    {% else %}
     {% if jobs_template %}
         {{ jobs_template|safe }}
+    {% endif %}
     {% endif %}
 {% endblock %}
 

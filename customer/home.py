@@ -21,6 +21,8 @@ def index():
     jobs_template = get_jobs_template()
     if g.user:
         flash(f"Welcome back, {g.user['first_name'].capitalize()}!", 'success')
+        if g.user['is_blocked'] == True:
+            flash(f"Warning, you are blocked!", 'warning')
         return render_template('customer/index.html', jobs_template=jobs_template)
     return redirect(url_for('auth.login'))
 
@@ -81,7 +83,7 @@ def create_job():
                 g.db_conn.commit()
                 print("after job created")
             except Exception as e:
-                flash(e, 'danger')
+                flash(crop_psql_error(str(e)), 'danger')
 
             return redirect(url_for('customer.new_jobs'))
 
@@ -348,6 +350,8 @@ def explore_job(job_id):
                 if status == 'new':
                     job_apps = get_job_applications_data(g.user['customer_id'], job_id)
                     job_apps_template = render_template('customer/applications_template.html', applications=job_apps)
+                    if g.user['is_blocked'] == True:
+                        flash('Nobody can see this new job, because you are blocked.', 'warning')
                     return render_template('customer/concrete_job.html', job=job_data,
                                            applications_template=job_apps_template)
 
