@@ -139,3 +139,30 @@ def explore_job(job_id):
         return render_template('admin/explore_job.html', job_template=job_template)
 
     return redirect(url_for('auth.login'))
+
+
+@admin.route('/active_customers/')
+def get_active_customers():
+    if g.user:
+        customers_template = get_active_customers_template()
+        return render_template('admin/customers.html', customers_template=customers_template)
+
+    return redirect(url_for('auth.login'))
+
+
+@admin.route('/blocked_customers/')
+def get_blocked_customers():
+    if g.user:
+        customers_template = get_blocked_customers_template()
+        return render_template('admin/customers.html', customers_template=customers_template)
+
+    return redirect(url_for('auth.login'))
+
+
+@admin.route('/explore_customer/<int:cust_id>')
+def explore_customer(cust_id):
+    if g.user:
+        customers_template = get_active_customers_template()
+        return render_template('admin/customers.html', customers_template=customers_template)
+
+    return redirect(url_for('auth.login'))

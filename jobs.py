@@ -132,4 +132,74 @@ def get_unfinished_job_template(job_id):
     return render_template('job_done_template.html', job=unfinished_job_data)
 
 
+def get_customers_data():
+    g.cursor.execute(
+        """
+        select * from get_customers_private_info();
+        """
+    )
+    customers_data = g.cursor.fetchall()
+
+    # for customer in customers_data:
+    #     customer['total_money_spent'] = psql_money_to_dec(customer['total_money_spent'])
+    #     customer['avg_job_price'] = psql_money_to_dec(customer['avg_job_price'])
+
+    return customers_data
+
+
+def get_customer_data(cust_id):
+    g.cursor.execute(
+        """
+        select * from get_customer_private_info(cust_id_p := %s);
+        """,
+        (cust_id,)
+    )
+    customer = g.cursor.fetchone()
+
+    # if customer:
+    #     customer['total_money_spent'] = psql_money_to_dec(customer['total_money_spent'])
+    #     customer['avg_job_price'] = psql_money_to_dec(customer['avg_job_price'])
+
+    return customer
+
+
+def get_active_customers_data():
+    g.cursor.execute(
+        """
+        select * from get_active_customers_private_info();
+        """
+    )
+    customers_data = g.cursor.fetchall()
+
+    # for customer in customers_data:
+    #     customer['total_money_spent'] = psql_money_to_dec(customer['total_money_spent'])
+    #     customer['avg_job_price'] = psql_money_to_dec(customer['avg_job_price'])
+
+    return customers_data
+
+
+def get_blocked_customers_data():
+    g.cursor.execute(
+        """
+        select * from get_blocked_customers_private_info();
+        """
+    )
+    customers_data = g.cursor.fetchall()
+
+    # for customer in customers_data:
+    #     customer['total_money_spent'] = psql_money_to_dec(customer['total_money_spent'])
+    #     customer['avg_job_price'] = psql_money_to_dec(customer['avg_job_price'])
+
+    return customers_data
+
+
+def get_active_customers_template():
+    customers_data = get_active_customers_data()
+    return render_template('customers_template.html', customers=customers_data)
+
+
+def get_blocked_customers_template():
+    customers_data = get_blocked_customers_data()
+    return render_template('customers_template.html', customers=customers_data)
+
 

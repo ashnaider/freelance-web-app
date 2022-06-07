@@ -44,6 +44,20 @@ DROP FUNCTION IF EXISTS GET_CUSTOMER_JOBS(cust_id integer);
 
 DROP TYPE IF EXISTS CUSTOMER_APPLICATION;
 
+drop function if exists get_blocked_customers_private_info();
+drop function if exists get_active_customers_private_info();
+drop function if exists get_customer_private_info(cust_id_p integer);
+drop function if exists get_customers_private_info();
+drop function if exists count_customer_attempts_to_leave(cust_id_p integer);
+drop function if exists count_customer_total_money_spent(cust_id_p integer);
+drop function if exists count_customer_avg_job_price(cust_id_p integer);
+drop function if exists count_customer_unfinished_jobs(cust_id_p integer);
+drop function if exists count_customer_finished_jobs(cust_id_p integer);
+drop function if exists count_customer_in_progress_jobs(cust_id_p integer);
+drop function if exists count_customer_new_jobs(cust_id_p integer);
+
+DROP TYPE IF EXISTS customer_private_info;
+
 
 CREATE OR REPLACE FUNCTION GET_CUSTOMER_JOBS(cust_id integer) RETURNS SETOF JOB_FULL_INFO
 AS $$
@@ -423,3 +437,172 @@ as $$
         return 2;
     end;
 $$ language plpgsql;
+
+
+create or replace function count_customer_new_jobs(cust_id_p integer)
+returns integer
+as
+$$
+    declare
+        new_jobs_count integer;
+    begin
+        select into new_jobs_count count(*) from get_customer_new_jobs(cust_id := cust_id_p);
+
+        return new_jobs_count;
+    end;
+$$ language plpgsql;
+
+
+create or replace function count_customer_in_progress_jobs(cust_id_p integer)
+returns integer
+as
+$$
+    declare
+        jobs_count integer;
+    begin
+        select into jobs_count count(*) from get_customer_in_progress_jobs(cust_id_p);
+        return jobs_count;
+    end;
+$$ language plpgsql;
+
+
+create or replace function count_customer_finished_jobs(cust_id_p integer)
+returns integer
+as
+$$
+    declare
+        jobs_count integer;
+    begin
+        select into jobs_count count(*) from get_customer_done_jobs(cust_id_p);
+        return jobs_count;
+    end;
+$$ language plpgsql;
+
+
+create or replace function count_customer_unfinished_jobs(cust_id_p integer)
+returns integer
+as
+$$
+    declare
+        jobs_count integer;
+    begin
+        select into jobs_count count(*) from get_customer_unfinished_jobs(cust_id_p);
+        return jobs_count;
+    end;
+$$ language plpgsql;
+
+
+create or replace function count_customer_total_money_spent(cust_id_p integer)
+returns numeric
+as
+$$
+    declare
+        money_spent integer;
+    begin
+        select into money_spent sum(app_price)::numeric from get_customer_done_jobs(cust_id_p);
+        return money_spent;
+    end;
+$$ language plpgsql;
+
+
+create or replace function count_customer_avg_job_price(cust_id_p integer)
+returns numeric
+as
+$$
+    declare
+        avg_price integer;
+    begin
+        select into avg_price AVG(app_price::numeric)::numeric from get_customer_done_jobs(cust_id_p);
+        return avg_price;
+    end;
+$$ language plpgsql;
+
+
+create or replace function count_customer_attempts_to_leave(cust_id_p integer)
+returns integer
+as
+$$
+    declare
+         attempts_to_leave integer;
+    begin
+        select into attempts_to_leave get_max_leaved_jobs_by_customer() - unfinished_jobs_count
+        from customer
+        where id = cust_id_p;
+
+        if attempts_to_leave < 0 then
+            return 0;
+        end if;
+
+        return attempts_to_leave;
+    end;
+$$ language plpgsql;
+
+
+create type customer_private_info as ( id integer,
+                                       first_name name_domain,
+                                       last_name name_domain,
+                                       email email_domain,
+                                       organisation_name varchar(150),
+                                       is_blocked boolean,
+                                       attempts_to_leave_before_get_blocked integer,
+                                       new_jobs_count integer,
+                                       in_progress_job_count integer,
+                                       unfinished_jobs_count integer,
+                                       finished_jobs_count integer,
+                                       total_money_spent numeric,
+                                       avg_job_price numeric);
+
+
+create or replace function get_customers_private_info()
+returns setof customer_private_info
+as
+$$
+    begin
+        return query
+        select c.id, c.first_name, c.last_name, u.email, c.organisation_name, c.is_blocked,
+               count_customer_attempts_to_leave(c.id),
+               count_customer_new_jobs(c.id),
+               count_customer_in_progress_jobs(c.id),
+               count_customer_unfinished_jobs(c.id),
+               count_customer_finished_jobs(c.id),
+               count_customer_total_money_spent(c.id),
+               count_customer_avg_job_price(c.id)
+        from customer as c inner join users as u on c.user_id = u.id;
+    end;
+$$ language plpgsql;
+
+create or replace function get_customer_private_info(cust_id_p integer)
+returns setof customer_private_info
+as
+$$
+    begin
+        return query
+        select * from get_customers_private_info() where id = cust_id_p;
+    end;
+$$ language plpgsql;
+
+
+
+create or replace function get_active_customers_private_info()
+returns setof customer_private_info
+as
+$$
+    begin
+        return query
+        select * from get_customers_private_info() where is_blocked = false;
+    end;
+$$ language plpgsql;
+
+
+
+create or replace function get_blocked_customers_private_info()
+returns setof customer_private_info
+as
+$$
+    begin
+        return query
+        select * from get_customers_private_info() where is_blocked = true;
+    end;
+$$ language plpgsql;
+
+

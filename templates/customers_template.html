@@ -1,0 +1,83 @@
+<h3 class="article-title">
+    Customers:
+</h3>
+{% if customers %}
+    {% for customer in customers %}
+        <article class="content-section">
+            <div class="container">
+                <div class="row">
+                    <div class="col-10 float-left">
+                        <h4>
+                            <a class="article-title row"
+                                    {% if g.user %}
+                                        {% if g.user.role == 'freelancer' %}
+                               href=""
+                                        {% elif g.user.role == 'customer' %}
+                               href=""
+                                        {% elif g.user.role == 'admin' %}
+                               href="{{ url_for('admin.explore_customer', cust_id=customer.id) }}"
+                                        {% endif %}
+                                    {% else %}
+                               href=""
+                                    {% endif %}
+                            >
+                                {{ customer.first_name|title }} {{ customer.last_name|title }}
+                            </a>
+                        </h4>
+                        <div class="row mt-3">
+                        <p>
+                            Status:
+                            {% if customer.is_blocked %}
+                                <span style="color: red;">
+                                blocked
+                                </span>
+                            {% else %}
+                                <span style="color: green;">
+                                active
+                                </span>
+                            {% endif %}
+                        </p>
+                        </div>
+                        <div class="row">
+                            <p>New jobs: {{ customer.new_jobs_count }}</p>
+                        </div>
+                        <div class="row">
+                            <p>Finished jobs: {{ customer.finished_jobs_count }}</p>
+                        </div>
+                    </div>
+{#                    <div class="bi bi-cash float-right col-2">#}
+{#                        <img#}
+{#                                src="../static/img/cash.svg"#}
+{#                                alt="cash logo"#}
+{#                                height="25"#}
+{#                                width="25"/>#}
+{##}
+{#                        <i>{{ job.price }}$</i>#}
+{#                        <div>#}
+{#                            {% if job.is_hourly_rate %}per hour{% else %}#}
+{#                                <div class="text-muted">for project</div>#}
+{#                            {% endif %}#}
+{#                        </div>#}
+{#                    </div>#}
+                </div>
+            </div>
+        </article>
+    {% endfor %}
+    {#    {% for page_num in posts.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}#}
+    {#        {% if page_num %}#}
+    {#            {% if posts.page == page_num %}#}
+    {#                <a class="btn btn-info mb-4"#}
+    {#                   href="{{ url_for('main.home', page=page_num) }}">{{ page_num }}</a>#}
+    {#            {% else %}#}
+    {#                <a class="btn btn-outline-info mb-4"#}
+    {#                   href="{{ url_for('main.home', page=page_num) }}">{{ page_num }}</a>#}
+    {#            {% endif %}#}
+    {#        {% else %}#}
+    {#            ...#}
+    {#        {% endif %}#}
+    {#    {% endfor %}#}
+{% else %}
+    <h5 class="article-title">
+        There are no jobs.
+    </h5>
+{% endif %}

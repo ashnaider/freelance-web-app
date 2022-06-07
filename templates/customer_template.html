@@ -1,0 +1,34 @@
+<div class="content-section">
+    {% if customer %}
+        <h2 class="article-title">{{ customer.first_name }} {{ customer.last_name }}</h2>
+        <p class="text-muted">
+            Status:
+            {% if customer.is_blocked %}
+                blocked
+            {% else %}
+                not blocked
+            {% endif %}
+
+            <span>&bull;</span>
+            <span class="text-dark">{{ job.applications_count }}</span>
+
+            {% if job.applications_count == 1 %}
+                application
+            {% else %}
+                applications
+            {% endif %}
+
+        </p>
+        <div class="bi bi-cash" style="color: green;">
+            <img src="../../../static/img/cash.svg" alt="cash logo" height="25" width="25"/>
+            <i>{{ job.price }}$</i>
+            {% if job.is_hourly_rate %}
+                per hour
+            {% else %}
+                for project
+            {% endif %}
+        </div>
+        <br>
+        <p class="article-content">{{ job.description }}</p>
+    {% endif %}
+</div>
