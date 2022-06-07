@@ -1,0 +1,7 @@
+{% extends 'admin/index.html' %}
+
+{% block content %}
+    {% if applications_template %}
+        {{ applications_template|safe }}
+    {% endif %}
+{% endblock %}

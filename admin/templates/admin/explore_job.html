@@ -1,0 +1,22 @@
+{% extends 'admin/index.html' %}
+
+{% block content %}
+    <div class="content-section">
+    {% if job_template %}
+        {{ job_template|safe }}
+    {% endif %}
+     <form method="POST" action="">
+                <div class="d-flex justify-content-between mt-5">
+                    <div class="d-flex flex-row">
+                        <div class="form-group">
+                            <input
+                                    type="submit"
+                                    class="btn btn-outline-danger"
+                                    value="Delete job"
+                                    name="submit">
+                        </div>
+                    </div>
+                </div>
+            </form>
+    </div>
+{% endblock %}

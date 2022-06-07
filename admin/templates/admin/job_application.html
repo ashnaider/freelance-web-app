@@ -1,0 +1,66 @@
+{% extends "admin/index.html" %}
+
+{% block content %}
+    {% if application %}
+        <div class="content-section">
+            <h2 class="article-title">{{ application.job_header }}</h2>
+            <legend class="border-bottom mb-3">{{ legend }}</legend>
+            <div class="bi bi-cash">
+                <img src="../../../static/img/cash.svg" alt="cash logo" height="25" width="25"/>
+                <i>{{ application.job_price }}$</i>
+                {% if application.is_hourly_rate %}
+                    per hour
+                {% else %}
+                    for project
+                {% endif %}
+            </div>
+            <br>
+            <h5>Job description:</h5>
+            <p class="article-cnontent">{{ application.job_description }}</p>
+            <legend class="border-bottom mb-3">{{ legend }}</legend>
+        <p class="article-content">Customer: <a
+                href=""> {{ application.cust_f_name|capitalize }} {{ application.cust_l_name|capitalize }} </a>
+            </p>
+        <p class="article-content">Customer e-mail: <i>{{ application.cust_email }}</i></p>
+
+        </div>
+        <div class="content-section">
+            <h5>Application description:</h5>
+            <p class="article-content">{{ application.app_description }}</p>
+            <legend class="border-bottom mb-3">{{ legend }}</legend>
+            <div class="bi bi-cash">
+                <img src="../../../static/img/cash.svg" alt="cash logo" height="25" width="25"/>
+                <i>{{ application.app_price }}$</i>
+                {% if application.is_hourly_rate %}
+                    per hour
+                {% else %}
+                    for project
+                {% endif %}
+            </div>
+            <br>
+
+            <legend class="border-bottom mb-3">{{ legend }}</legend>
+            <p class="article-content">Freelancer: <a
+                    href=""> {{ application.fr_f_name|capitalize }} {{ application.fr_l_name|capitalize }} </a>
+            </p>
+            <p class="article-content">Freelancer e-mail: <i>{{ application.fr_email }}</i></p>
+            <form method="POST" action="">
+                <div class="d-flex justify-content-between mt-5">
+                    <div class="d-flex flex-row">
+                        <div class="form-group">
+                            <input
+                                    type="submit"
+                                    class="btn btn-outline-danger"
+                                    value="Delete application"
+                                    name="submit">
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+    {% else %}
+        <h3>Application not found.</h3>
+    {% endif %}
+
+{% endblock %}

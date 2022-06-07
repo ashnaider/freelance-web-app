@@ -7,13 +7,13 @@
 
 {% block left_menu %}
     <a class="nav-item nav-link" href="{{ url_for('admin.index') }}">Jobs</a>
-    <a class="nav-item nav-link" href="">Blocked jobs</a>
-
-    <a class="nav-item nav-link ml-4" href="">Freelancers</a>
-    <a class="nav-item nav-link" href="">Blocked freelancers</a>
-
-    <a class="nav-item nav-link ml-4" href="">Customers</a>
-    <a class="nav-item nav-link" href="">Blocked freelancers</a>
+{#    <a class="nav-item nav-link" href="">Blocked jobs</a>#}
+{##}
+{#    <a class="nav-item nav-link ml-4" href="">Freelancers</a>#}
+{#    <a class="nav-item nav-link" href="">Blocked freelancers</a>#}
+{##}
+{#    <a class="nav-item nav-link ml-4" href="">Customers</a>#}
+{#    <a class="nav-item nav-link" href="">Blocked freelancers</a>#}
 {% endblock %}
 
 {#{% block user_buttons %}#}
@@ -39,4 +39,35 @@
 
 
 {% block sidebar_block %}
+    <div class="col-md-4">
+        <div class="content-section">
+            <h3>Go to</h3>
+            <ul class="list-group">
+                <a href="{{ url_for('admin.index') }}">
+                    <li class="list-group-item">New jobs</li>
+                </a>
+                <a href="{{ url_for('admin.get_applications') }}">
+                    <li class="list-group-item">Applications</li>
+                </a>
+            </ul>
+            <br>
+            <ul class="list-group">
+                <a href="">
+                    <li class="list-group-item">Customers</li>
+                </a>
+                <a href="">
+                    <li class="list-group-item">Blocked customers</li>
+                </a>
+            </ul>
+            <br>
+            <ul class="list-group">
+                <a href="">
+                    <li class="list-group-item">Freelancers</li>
+                </a>
+                <a href="">
+                    <li class="list-group-item">Blocked customers</li>
+                </a>
+            </ul>
+        </div>
+    </div>
 {% endblock %}

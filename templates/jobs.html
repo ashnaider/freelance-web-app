@@ -24,6 +24,8 @@
                                href="{{ url_for('freelancer.apply_job', job_id=job.job_id) }}"
                                         {% elif g.user.role == 'customer' %}
                                href="{{ url_for('customer.explore_job', job_id=job.job_id) }}"
+                                        {% elif g.user.role == 'admin' %}
+                               href="{{ url_for('admin.explore_job', job_id=job.job_id) }}"
                                         {% endif %}
                                     {% else %}
                                href="{{ url_for('jobs.get_job', job_id=job.job_id) }}"
