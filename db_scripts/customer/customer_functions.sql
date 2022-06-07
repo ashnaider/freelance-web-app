@@ -1,3 +1,11 @@
+drop type if exists job_with_app_and_users;
+
+drop function if exists get_customer_unfinished_jobs(cust_id_p integer);
+drop function if exists get_customer_done_jobs(cust_id_p integer);
+drop function if exists get_customer_in_progress_jobs(cust_id_p integer);
+DROP FUNCTION IF EXISTS GET_CUSTOMER_NEW_JOBS(cust_id integer);
+drop function if exists get_customer_jobs_with_app_and_users(cust_id_p integer);
+
 drop function if exists get_max_leaved_jobs_by_customer();
 drop function if exists delete_new_jobs_of_customer(cust_id_p integer);
 drop function if exists leave_job_by_customer(job_id_p integer);
@@ -25,10 +33,7 @@ drop function if exists accept_application_for_job(app_id_p integer, job_id_p in
 
 DROP FUNCTION IF EXISTS GET_JOB_PERFORMER(cust_id_p integer, job_id_p integer);
 
-DROP FUNCTION IF EXISTS GET_CUSTOMER_NEW_JOBS(cust_id integer);
-DROP FUNCTION IF EXISTS GET_CUSTOMER_IN_PROGRESS_JOBS(cust_id integer);
-DROP FUNCTION IF EXISTS GET_CUSTOMER_DONE_JOBS(cust_id integer);
-DROP FUNCTION IF EXISTS GET_CUSTOMER_UNFINISHED_JOBS(cust_id integer);
+
 
 DROP FUNCTION IF EXISTS GET_ACTIVE_CUSTOMER_APPLICATIONS(cust_id integer);
 DROP FUNCTION IF EXISTS GET_ALL_CUSTOMER_APPLICATIONS(cust_id_p integer);
@@ -76,32 +81,87 @@ AS $$
 $$ LANGUAGE plpgsql;
 
 
-CREATE OR REPLACE FUNCTION GET_CUSTOMER_IN_PROGRESS_JOBS(cust_id integer) RETURNS SETOF JOB_FULL_INFO
-AS $$
-    BEGIN
+create type job_with_app_and_users
+as (
+                job_id          integer,
+                job_header      varchar(250),
+                job_description varchar(650),
+                job_status      project_status,
+                job_posted      timestamp,
+                job_accepted    timestamp,
+                job_started     timestamp,
+                job_finished    timestamp,
+                job_price       money,
+                is_hourly_rate  boolean,
+                app_id          integer,
+                app_description varchar(450),
+                app_price       money,
+                cust_id         integer,
+                cust_f_name     name_domain,
+                cust_l_name     name_domain,
+                cust_email      email_domain,
+                cust_is_blocked boolean,
+                fr_id integer,
+                fr_f_name name_domain,
+                fr_l_name name_domain,
+                fr_email email_domain,
+                fr_id_blocked boolean
+              );
+
+
+create or replace function get_customer_jobs_with_app_and_users(cust_id_p integer)
+returns setof job_with_app_and_users
+as
+$$
+    begin
         return query
-        select * from GET_CUSTOMER_JOBS(cust_id) as jobs
-        where jobs.job_status = 'in progress' or jobs.job_status = 'accepted';
-    END;
-$$ LANGUAGE plpgsql;
+        select
+        j.id, j.header_, j.description, j.status, j.posted, j.accepted, j.started, j.finished, j.price, j.is_hourly_rate,
+        a.id, a.description, a.price, c.id, c.first_name, c.last_name, u.email, c.is_blocked,
+        f.id, f.first_name, f.last_name, u2.email, f.is_blocked
+        from application as a
+        inner join new_job j on a.id = j.application_id
+        inner join customer c on j.customer_id = c.id
+        inner join freelancer f on a.freelancer_id = f.id
+        inner join users u on c.user_id = u.id
+        inner join users u2 on a.freelancer_id = u2.id
+        where j.customer_id = cust_id_p;
+    end;
+$$ language plpgsql;
 
 
-CREATE OR REPLACE FUNCTION GET_CUSTOMER_DONE_JOBS(cust_id integer) RETURNS SETOF JOB_FULL_INFO
-AS $$
-    BEGIN
+create or replace function get_customer_in_progress_jobs(cust_id_p integer)
+returns setof job_with_app_and_users
+as
+$$
+    begin
         return query
-        select * from GET_CUSTOMER_JOBS(cust_id) as jobs where jobs.job_status = 'done';
-    END;
-$$ LANGUAGE plpgsql;
+        select * from get_customer_jobs_with_app_and_users(cust_id_p)
+        where job_status = 'accepted' or job_status = 'in progress';
+    end;
+$$ language plpgsql;
 
-
-CREATE OR REPLACE FUNCTION GET_CUSTOMER_UNFINISHED_JOBS(cust_id integer) RETURNS SETOF JOB_FULL_INFO
-AS $$
-    BEGIN
+create or replace function get_customer_done_jobs(cust_id_p integer)
+returns setof job_with_app_and_users
+as
+$$
+    begin
         return query
-        select * from GET_CUSTOMER_JOBS(cust_id) as jobs where jobs.job_status = 'unfinished';
-    END;
-$$ LANGUAGE plpgsql;
+        select * from get_customer_jobs_with_app_and_users(cust_id_p)
+        where job_status = 'done';
+    end;
+$$ language plpgsql;
+
+create or replace function get_customer_unfinished_jobs(cust_id_p integer)
+returns setof job_with_app_and_users
+as
+$$
+    begin
+        return query
+        select * from get_customer_jobs_with_app_and_users(cust_id_p)
+        where job_status = 'unfinished';
+    end;
+$$ language plpgsql;
 
 
 CREATE TYPE CUSTOMER_APPLICATION

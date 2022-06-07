@@ -27,11 +27,6 @@ def index():
 
 def get_customer(user_id):
     cur = get_db_cursor()
-    # cur.execute(
-    #     'SELECT email, role, first_name, last_name, organisation_name, is_blocked, c.id as customer_id  '
-    #     'FROM customer AS c INNER JOIN users AS u ON c.user_id = u.id WHERE user_id = %s',
-    #     (user_id,)
-    # )
     cur.execute(
         """
         select * from get_customer(%s);
@@ -121,7 +116,9 @@ def get_customer_in_progress_jobs(cust_id):
     jobs = g.cursor.fetchall()
 
     for job in jobs:
-        job['price'] = psql_money_to_dec(job['price'])
+        job['job_price'] = psql_money_to_dec(job['job_price'])
+        job['app_price'] = psql_money_to_dec(job['app_price'])
+
     return render_template('customer/jobs_in_progress_template.html', jobs=jobs)
 
 
@@ -135,7 +132,9 @@ def get_customer_done_jobs(cust_id):
     jobs = g.cursor.fetchall()
 
     for job in jobs:
-        job['price'] = psql_money_to_dec(job['price'])
+        job['job_price'] = psql_money_to_dec(job['job_price'])
+        job['app_price'] = psql_money_to_dec(job['app_price'])
+
     return render_template('customer/jobs_done_template.html', jobs=jobs, jobs_title='Finished jobs')
 
 
@@ -149,7 +148,9 @@ def get_customer_unfinished_jobs(cust_id):
     jobs = g.cursor.fetchall()
 
     for job in jobs:
-        job['price'] = psql_money_to_dec(job['price'])
+        job['job_price'] = psql_money_to_dec(job['job_price'])
+        job['app_price'] = psql_money_to_dec(job['app_price'])
+
     return render_template('customer/jobs_unfinished_template.html', jobs=jobs, jobs_title='Unfinished jobs')
 
 
@@ -319,6 +320,21 @@ def get_job_performer_data(cust_id, job_id):
         performer_data['job_price'] = psql_money_to_dec(performer_data['job_price'])
 
     return performer_data
+
+
+def get_job_application(job_id, fr_id):
+    g.cursor.execute(
+        """
+        SELECT * FROM get_application(job_id_p := %s, fr_id_p :=  %s);
+        """,
+        (job_id, fr_id)
+    )
+    application = g.cursor.fetchone()
+
+    if application:
+        application['price'] = psql_money_to_dec(application['price'])
+
+    return application
 
 
 @customer.route('/job/<int:job_id>', methods=['GET', 'POST'])
