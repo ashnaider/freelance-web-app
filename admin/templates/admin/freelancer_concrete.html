@@ -1,0 +1,7 @@
+{% extends 'admin/index.html' %}
+
+{% block content %}
+    {% if freelancer_template %}
+        {{ freelancer_template|safe }}
+    {% endif %}
+{% endblock %}

@@ -55,19 +55,6 @@ def load_logged_in_user():
         g.cursor = get_db_cursor()
 
 
-# @freelancer.route('/search', methods=['GET'])
-# def search():
-#     try:
-#         g.cursor.execute(
-#             'SELECT * FROM new_job INNER JOIN customer AS c on new_job.customer_id = c.id'
-#         )
-#         new_jobs = g.cursor.fetchall()
-#     except Exception as exc:
-#         pass
-#
-#     print("new_jobs: ", new_jobs)
-#     return render_template('freelancer/jobs.html', jobs=new_jobs)
-
 
 @freelancer.route('/edit_profile', methods=['GET', 'POST'])
 def edit_profile():
@@ -93,8 +80,9 @@ def edit_profile():
                 )
                 g.db_conn.commit()
             except Exception as e:
-                flash(str(e), 'danger')
+                flash(str(crop_psql_error(str(e))), 'danger')
             else:
+                flash('Profile updated!', 'success')
                 load_logged_in_user()
 
         return render_template('freelancer/profile.html', form=form, profile=g.user)

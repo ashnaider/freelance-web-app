@@ -1,3 +1,6 @@
+drop function if exists block_freelancer(fr_id_p integer);
+drop function if exists unblock_freelancer(fr_id_p integer);
+
 drop function if exists get_freelancer_finished_jobs(fr_id_p integer);
 drop function if exists get_freelancer_unfinished_jobs(fr_id_p integer);
 drop function if exists get_freelancer(user_id_p integer);
@@ -19,6 +22,19 @@ drop function if exists remove_job_application_by_freelancer(job_id_p integer, f
 drop function if exists start_doing_job_by_freelancer(fr_id_p integer);
 drop function if exists finish_doing_job_by_freelancer(fr_id_p integer);
 drop function if exists leave_job_by_freelancer(fr_id_p integer);
+
+drop function if exists count_freelancer_avg_app_price(fr_id_p integer);
+drop function if exists count_freelancer_total_money_earned(fr_id_p integer);
+drop function if exists count_freelancer_finished_jobs(fr_id_p integer);
+drop function if exists count_freelancer_unfinished_jobs(fr_id_p integer);
+drop function if exists count_freelancer_active_applications(fr_id_p integer);
+drop function if exists count_freelancer_attempts_to_leave(fr_id_p integer);
+
+drop function if exists get_blocked_freelancers_private_info();
+drop function if exists get_active_freelancers_private_info();
+drop function if exists get_freelancer_private_info(fr_id_p integer);
+drop function if exists get_freelancers_private_info();
+drop type if exists freelancer_private_info;
 
 
 create or replace function get_freelancer(user_id_p integer)
@@ -320,5 +336,189 @@ $$
         inner join customer c on j.customer_id = c.id
         inner join users u on c.user_id = u.id
         where a.freelancer_id = fr_id_p and j.status = 'done';
+    end;
+$$ language plpgsql;
+
+
+
+create type freelancer_private_info as ( id integer,
+                                       first_name name_domain,
+                                       last_name name_domain,
+                                       email email_domain,
+                                       resume_link varchar(250),
+                                       specialization varchar(250),
+                                       job_id_working_on integer,
+                                       started_doing_job boolean,
+                                       is_blocked boolean,
+                                       attempts_to_leave_before_get_blocked integer,
+                                       active_applications_count integer,
+                                       unfinished_jobs_count integer,
+                                       finished_jobs_count integer,
+                                       total_money_earned numeric,
+                                       avg_app_price numeric);
+
+
+create or replace function get_freelancers_private_info()
+returns setof freelancer_private_info
+as
+$$
+    begin
+        return query
+        select f.id, f.first_name, f.last_name, u.email, f.resume_link, f.specialization,
+               f.job_id_working_on, f.started_doing_job, f.is_blocked,
+               count_freelancer_attempts_to_leave(f.id),
+               count_freelancer_active_applications(f.id),
+               count_freelancer_unfinished_jobs(f.id),
+               count_freelancer_finished_jobs(f.id),
+               count_freelancer_total_money_earned(f.id),
+               count_freelancer_avg_app_price(f.id)
+
+        from freelancer as f inner join users as u on f.user_id = u.id;
+    end;
+$$ language plpgsql;
+
+
+create or replace function get_freelancer_private_info(fr_id_p integer)
+returns setof freelancer_private_info
+as
+$$
+    begin
+        return query
+        select * from get_freelancers_private_info() where id = fr_id_p;
+    end;
+$$ language plpgsql;
+
+
+create or replace function get_active_freelancers_private_info()
+returns setof freelancer_private_info
+as
+$$
+    begin
+        return query
+        select * from get_freelancers_private_info() where is_blocked = false;
+    end;
+$$ language plpgsql;
+
+
+create or replace function get_blocked_freelancers_private_info()
+returns setof freelancer_private_info
+as
+$$
+    begin
+        return query
+        select * from get_freelancers_private_info() where is_blocked = true;
+    end;
+$$ language plpgsql;
+
+
+
+create or replace function count_freelancer_attempts_to_leave(fr_id_p integer)
+returns integer
+as
+$$
+    declare
+         attempts_to_leave integer;
+    begin
+        select into attempts_to_leave get_max_leaved_jobs_by_freelancer() - unfinished_jobs_count
+        from freelancer
+        where id = fr_id_p;
+
+        if attempts_to_leave < 0 then
+            return 0;
+        end if;
+
+        return attempts_to_leave;
+    end;
+$$ language plpgsql;
+
+
+create or replace function count_freelancer_active_applications(fr_id_p integer)
+returns integer
+as
+$$
+    declare
+        apps_count integer;
+    begin
+        select into apps_count count(*) from application where freelancer_id = fr_id_p and status = 'new';
+        return apps_count;
+    end;
+$$ language plpgsql;
+
+
+create or replace function count_freelancer_unfinished_jobs(fr_id_p integer)
+returns integer
+as
+$$
+    declare
+        jobs_count integer;
+    begin
+        select into jobs_count count(*) from get_freelancer_unfinished_jobs(fr_id_p);
+        return jobs_count;
+    end;
+$$ language plpgsql;
+
+
+create or replace function count_freelancer_finished_jobs(fr_id_p integer)
+returns integer
+as
+$$
+    declare
+        jobs_count integer;
+    begin
+        select into jobs_count count(*) from get_freelancer_finished_jobs(fr_id_p);
+        return jobs_count;
+    end;
+$$ language plpgsql;
+
+
+create or replace function count_freelancer_total_money_earned(fr_id_p integer)
+returns numeric
+as
+$$
+    declare
+        total_money integer;
+    begin
+        select into total_money sum(app_price::numeric)::numeric from get_freelancer_finished_jobs(fr_id_p);
+        return total_money;
+    end;
+$$ language plpgsql;
+
+
+create or replace function count_freelancer_avg_app_price(fr_id_p integer)
+returns numeric
+as
+$$
+    declare
+        finished_avg integer;
+        unfinished_avg integer;
+    begin
+        select into finished_avg avg(app_price::numeric)::numeric from get_freelancer_finished_jobs(fr_id_p);
+        select into unfinished_avg avg(app_price::numeric)::numeric from get_freelancer_unfinished_jobs(fr_id_p);
+
+        return (finished_avg + unfinished_avg) / 2;
+    end;
+$$ language plpgsql;
+
+
+create or replace function block_freelancer(fr_id_p integer)
+returns integer
+as
+$$
+    begin
+        update freelancer set is_blocked = true where id = fr_id_p;
+
+        return 1;
+    end;
+$$ language plpgsql;
+
+
+create or replace function unblock_freelancer(fr_id_p integer)
+returns integer
+as
+$$
+    begin
+        update freelancer set is_blocked = false where id = fr_id_p;
+
+        return 1;
     end;
 $$ language plpgsql;

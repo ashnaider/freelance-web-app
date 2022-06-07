@@ -1,0 +1,7 @@
+{% extends 'admin/index.html' %}
+
+{% block content %}
+    {% if customer_template %}
+        {{ customer_template|safe }}
+    {% endif %}
+{% endblock %}

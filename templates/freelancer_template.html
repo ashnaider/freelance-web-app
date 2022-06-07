@@ -1,13 +1,13 @@
-{% if customer %}
+{% if freelancer %}
     <div class="content-section">
         <div class="container">
             <h2 class="article-title">
-                {{ customer.first_name|title }} {{ customer.last_name|title }}</h2>
+                {{ freelancer.first_name|title }} {{ freelancer.last_name|title }}</h2>
             <div>
                 <div class="mt-3">
                     <p>
                         Status:
-                        {% if customer.is_blocked %}
+                        {% if freelancer.is_blocked %}
                             <span style="color: red;">
                                 blocked
                                 </span>
@@ -18,11 +18,11 @@
                         {% endif %}
                     </p>
                 </div>
-                <div >
-                    <p>New jobs: {{ customer.new_jobs_count }}</p>
+                <div>
+                    <p>New applications: {{ freelancer.active_applications_count }}</p>
                 </div>
-                <div >
-                    <p>Finished jobs: {{ customer.finished_jobs_count }}</p>
+                <div>
+                    <p>Finished jobs: {{ freelancer.finished_jobs_count }}</p>
                 </div>
                 {% if g.user.role == 'admin' %}
 
@@ -32,12 +32,12 @@
                                 <div class="form-group">
                                     <input
                                             type="submit"
-                                            {% if customer.is_blocked == True %}
+                                            {% if freelancer.is_blocked == True %}
                                             class="btn btn-outline-success"
-                                            value="Unblock customer"
-                                            {% elif customer.is_blocked == False %}
+                                            value="Unblock freelancer"
+                                            {% elif freelancer.is_blocked == False %}
                                             class="btn btn-outline-danger"
-                                            value="Block customer"
+                                            value="Block freelancer"
                                             {% endif %}
                                             name="submit">
                                 </div>

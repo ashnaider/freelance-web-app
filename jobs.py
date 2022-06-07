@@ -132,6 +132,8 @@ def get_unfinished_job_template(job_id):
     return render_template('job_done_template.html', job=unfinished_job_data)
 
 
+################# CUSTOMERS DATA #####################
+
 def get_customers_data():
     g.cursor.execute(
         """
@@ -139,11 +141,6 @@ def get_customers_data():
         """
     )
     customers_data = g.cursor.fetchall()
-
-    # for customer in customers_data:
-    #     customer['total_money_spent'] = psql_money_to_dec(customer['total_money_spent'])
-    #     customer['avg_job_price'] = psql_money_to_dec(customer['avg_job_price'])
-
     return customers_data
 
 
@@ -155,11 +152,6 @@ def get_customer_data(cust_id):
         (cust_id,)
     )
     customer = g.cursor.fetchone()
-
-    # if customer:
-    #     customer['total_money_spent'] = psql_money_to_dec(customer['total_money_spent'])
-    #     customer['avg_job_price'] = psql_money_to_dec(customer['avg_job_price'])
-
     return customer
 
 
@@ -170,11 +162,6 @@ def get_active_customers_data():
         """
     )
     customers_data = g.cursor.fetchall()
-
-    # for customer in customers_data:
-    #     customer['total_money_spent'] = psql_money_to_dec(customer['total_money_spent'])
-    #     customer['avg_job_price'] = psql_money_to_dec(customer['avg_job_price'])
-
     return customers_data
 
 
@@ -185,11 +172,6 @@ def get_blocked_customers_data():
         """
     )
     customers_data = g.cursor.fetchall()
-
-    # for customer in customers_data:
-    #     customer['total_money_spent'] = psql_money_to_dec(customer['total_money_spent'])
-    #     customer['avg_job_price'] = psql_money_to_dec(customer['avg_job_price'])
-
     return customers_data
 
 
@@ -202,4 +184,69 @@ def get_blocked_customers_template():
     customers_data = get_blocked_customers_data()
     return render_template('customers_template.html', customers=customers_data)
 
+
+def get_customer_template(cust_id):
+    customer_data = get_customer_data(cust_id)
+    return render_template('customer_template.html', customer=customer_data)
+
+
+
+###################### FREELANCERS DATA #######################
+
+
+def get_freelancers_data():
+    g.cursor.execute(
+        """
+        select * from get_freelancers_private_info();
+        """
+    )
+    freelancer_data = g.cursor.fetchall()
+
+    return freelancer_data
+
+
+def get_freelancer_data(fr_id):
+    g.cursor.execute(
+        """
+        select * from get_freelancer_private_info(fr_id_p := %s);
+        """,
+        (fr_id,)
+    )
+    freelancer = g.cursor.fetchone()
+    return freelancer
+
+
+def get_active_freelancers_data():
+    g.cursor.execute(
+        """
+        select * from get_active_freelancers_private_info();
+        """
+    )
+    freelancers_data = g.cursor.fetchall()
+    return freelancers_data
+
+
+def get_blocked_freelancers_data():
+    g.cursor.execute(
+        """
+        select * from get_blocked_freelancers_private_info();
+        """
+    )
+    freelancers_data = g.cursor.fetchall()
+    return freelancers_data
+
+
+def get_active_freelancers_template():
+    freelancers_data = get_active_freelancers_data()
+    return render_template('freelancers_template.html', freelancers=freelancers_data)
+
+
+def get_blocked_freelancers_template():
+    freelancers_data = get_blocked_freelancers_data()
+    return render_template('freelancers_template.html', freelancers=freelancers_data)
+
+
+def get_freelancer_template(cust_id):
+    freelancer_data = get_freelancer_data(cust_id)
+    return render_template('freelancer_template.html', freelancer=freelancer_data)
 

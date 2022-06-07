@@ -141,6 +141,8 @@ def explore_job(job_id):
     return redirect(url_for('auth.login'))
 
 
+################ CUSTOMERS ###################
+
 @admin.route('/active_customers/')
 def get_active_customers():
     if g.user:
@@ -159,10 +161,89 @@ def get_blocked_customers():
     return redirect(url_for('auth.login'))
 
 
-@admin.route('/explore_customer/<int:cust_id>')
+@admin.route('/explore_customer/<int:cust_id>', methods=['GET', 'POST'])
 def explore_customer(cust_id):
     if g.user:
-        customers_template = get_active_customers_template()
-        return render_template('admin/customers.html', customers_template=customers_template)
+        if request.method == 'POST':
+            if request.form['submit'] == 'Block customer':
+                try:
+                    g.cursor.execute(
+                        'select * from block_customer(cust_id_p := %s);',
+                        (cust_id,)
+                    )
+                    g.db_conn.commit()
+                except Exception as e:
+                    flash(crop_psql_error(str(e)), 'danger')
+                else:
+                    flash(f"Customer was blocked!", 'success')
+
+            elif request.form['submit'] == 'Unblock customer':
+                try:
+                    g.cursor.execute(
+                        'select * from unblock_customer(cust_id_p := %s);',
+                        (cust_id,)
+                    )
+                    g.db_conn.commit()
+                except Exception as e:
+                    flash(crop_psql_error(str(e)), 'danger')
+                else:
+                    flash(f"Customer was unlocked!", 'success')
+
+        customer_template = get_customer_template(cust_id)
+        return render_template('admin/customer_concrete.html', customer_template=customer_template)
+
+    return redirect(url_for('auth.login'))
+
+
+################ FREELANCERS ###################
+
+@admin.route('/active_freelancers/')
+def get_active_freelancers():
+    if g.user:
+        freelancers_template = get_active_freelancers_template()
+        return render_template('admin/freelancers.html', freelancers_template=freelancers_template)
+
+    return redirect(url_for('auth.login'))
+
+
+@admin.route('/blocked_freelancers/')
+def get_blocked_freelancers():
+    if g.user:
+        freelancers_template = get_blocked_freelancers_template()
+        return render_template('admin/freelancers.html', freelancers_template=freelancers_template)
+
+    return redirect(url_for('auth.login'))
+
+
+@admin.route('/explore_freelancer/<int:fr_id>', methods=['GET', 'POST'])
+def explore_freelancer(fr_id):
+    if g.user:
+        if request.method == 'POST':
+            if request.form['submit'] == 'Block freelancer':
+                try:
+                    g.cursor.execute(
+                        'select * from block_freelancer(fr_id_p := %s);',
+                        (fr_id,)
+                    )
+                    g.db_conn.commit()
+                except Exception as e:
+                    flash(crop_psql_error(str(e)), 'danger')
+                else:
+                    flash(f"Freelancer was blocked!", 'success')
+
+            elif request.form['submit'] == 'Unblock freelancer':
+                try:
+                    g.cursor.execute(
+                        'select * from unblock_freelancer(fr_id_p := %s);',
+                        (fr_id,)
+                    )
+                    g.db_conn.commit()
+                except Exception as e:
+                    flash(crop_psql_error(str(e)), 'danger')
+                else:
+                    flash(f"Freelancer was unlocked!", 'success')
+
+        freelancer_template = get_freelancer_template(fr_id)
+        return render_template('admin/freelancer_concrete.html', freelancer_template=freelancer_template)
 
     return redirect(url_for('auth.login'))

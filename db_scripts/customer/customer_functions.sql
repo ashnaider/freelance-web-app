@@ -1,3 +1,5 @@
+drop function if exists block_customer(cust_id_p integer);
+drop function if exists unblock_customer(cust_id_p integer);
 drop function if exists get_customer_unfinished_jobs(cust_id_p integer);
 drop function if exists get_customer_done_jobs(cust_id_p integer);
 drop function if exists get_customer_in_progress_jobs(cust_id_p integer);
@@ -512,7 +514,7 @@ $$
     declare
         avg_price integer;
     begin
-        select into avg_price AVG(app_price::numeric)::numeric from get_customer_done_jobs(cust_id_p);
+        select into avg_price AVG(price::numeric)::numeric from get_customer_jobs(cust_id_p);
         return avg_price;
     end;
 $$ language plpgsql;
@@ -606,3 +608,23 @@ $$
 $$ language plpgsql;
 
 
+create or replace function unblock_customer(cust_id_p integer)
+returns integer
+as
+$$
+    begin
+        update customer set is_blocked = false where id = cust_id_p;
+        return 1;
+    end;
+$$ language plpgsql;
+
+
+create or replace function block_customer(cust_id_p integer)
+returns integer
+as
+$$
+    begin
+        update customer set is_blocked = true where id = cust_id_p;
+        return 1;
+    end;
+$$ language plpgsql;

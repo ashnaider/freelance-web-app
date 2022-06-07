@@ -61,10 +61,10 @@
             </ul>
             <br>
             <ul class="list-group">
-                <a href="">
+                <a href="{{ url_for('admin.get_active_freelancers') }}">
                     <li class="list-group-item">Freelancers</li>
                 </a>
-                <a href="">
+                <a href="{{ url_for('admin.get_blocked_freelancers') }}">
                     <li class="list-group-item">Blocked customers</li>
                 </a>
             </ul>

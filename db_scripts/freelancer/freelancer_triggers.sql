@@ -1,6 +1,12 @@
 -- drop trigger if exists CHECK_IF_CAN_START_JOB on freelancer;
 -- drop function if exists CHECK_IF_CAN_START_JOB_F();
 
+drop trigger if exists PREVENT_PROFILE_UPDATE_WHEN_BLOCKED on freelancer;
+drop function if exists PREVENT_PROFILE_UPDATE_WHEN_BLOCKED_F();
+
+drop trigger if exists BLOCK_UNBLOCK_FREELANCER on freelancer;
+drop function if exists BLOCK_UNBLOCK_FREELANCER_F();
+
 drop trigger if exists CHECK_IF_FREELANCER_CAN_APPLY_FOR_JOB on application;
 drop function if exists CHECK_IF_FREELANCER_CAN_APPLY_FOR_JOB_F();
 
@@ -93,18 +99,26 @@ AS $$
     DECLARE
         freelancer_has_job boolean;
         app_exist boolean;
+        freelancer_id_blocked boolean;
     BEGIN
+        --- Check if freelancer already has an active job ---
         select into freelancer_has_job (not job_id_working_on is null) from freelancer where id = new.freelancer_id;
 
         if freelancer_has_job = true then
             raise exception 'You already have job. Finish it first, before applying to other jobs!';
         end if;
 
+        --- Check if freelancer has applied to same job he has ---
         select into app_exist (count(*) = 1) from application
         where freelancer_id = new.freelancer_id and job_id = new.job_id;
 
-        if app_exist then
+        if app_exist = true then
             raise exception 'You already applied for this job!';
+        end if;
+
+        select into freelancer_id_blocked is_blocked from freelancer where id = new.freelancer_id;
+        if freelancer_id_blocked = true then
+            raise exception E'You can\'t apply for this job, because you are blocked!';
         end if;
 
         return NEW;
@@ -135,6 +149,53 @@ CREATE TRIGGER BLOCK_FREELANCER_WHEN_MANY_UNFINISHED_JOBS
     BEFORE UPDATE OR INSERT ON freelancer
     FOR EACH ROW
     EXECUTE PROCEDURE BLOCK_FREELANCER_WHEN_MANY_UNFINISHED_JOBS_F();
+
+
+CREATE OR REPLACE FUNCTION BLOCK_UNBLOCK_FREELANCER_F() RETURNS TRIGGER
+    LANGUAGE PLPGSQL
+AS $$
+    BEGIN
+        if old.is_blocked = false and new.is_blocked = true then
+            --- Blocking freelancer ---
+            perform delete_new_applications_of_freelancer(new.id);
+        end if;
+
+        if old.is_blocked = false and new.is_blocked = false then
+            --- Unblocking freelancer ---
+            new.unfinished_jobs_count = 0;
+        end if;
+
+        return new;
+    END
+$$;
+
+CREATE TRIGGER BLOCK_UNBLOCK_FREELANCER
+    BEFORE UPDATE OR INSERT ON freelancer
+    FOR EACH ROW
+    EXECUTE PROCEDURE BLOCK_UNBLOCK_FREELANCER_F();
+
+
+CREATE OR REPLACE FUNCTION PREVENT_PROFILE_UPDATE_WHEN_BLOCKED_F() RETURNS TRIGGER
+    LANGUAGE PLPGSQL
+AS $$
+    BEGIN
+        if new.is_blocked then
+            if old.first_name <> new.first_name or
+               old.last_name <> new.last_name or
+               old.specialization <> new.specialization or
+               old.resume_link <> new.resume_link then
+                raise exception 'Unable to update profile, because freelancer is blocked!';
+            end if;
+        end if;
+
+        return new;
+    END
+$$;
+
+CREATE TRIGGER PREVENT_PROFILE_UPDATE_WHEN_BLOCKED
+    BEFORE UPDATE OR INSERT ON freelancer
+    FOR EACH ROW
+    EXECUTE PROCEDURE PREVENT_PROFILE_UPDATE_WHEN_BLOCKED_F();
 
 
 
