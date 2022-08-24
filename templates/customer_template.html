@@ -4,6 +4,7 @@
             <h2 class="article-title">
                 {{ customer.first_name|title }} {{ customer.last_name|title }}</h2>
             <div>
+                <legend class="border-bottom mb-3">{{ legend }}</legend>
                 <div class="mt-3">
                     <p>
                         Status:
@@ -18,11 +19,50 @@
                         {% endif %}
                     </p>
                 </div>
-                <div >
-                    <p>New jobs: {{ customer.new_jobs_count }}</p>
+                <div>
+                    <p>New jobs: <b>{{ customer.new_jobs_count }}</b></p>
                 </div>
-                <div >
-                    <p>Finished jobs: {{ customer.finished_jobs_count }}</p>
+                <div>
+                    <p>Jobs in progress: <b>{{ customer.in_progress_jobs_count }}</b></p>
+                </div>
+                <div>
+                    <p>Finished jobs: <b>{{ customer.finished_jobs_count }}</b></p>
+                </div>
+            <div>
+                    <p>Total money spent:
+                        <b>
+                            {% if customer.total_money_spent %}
+                                {{ customer.total_money_spent }}
+                            {% else %}
+                                0
+                            {% endif %}
+                        </b>
+                    </p>
+                </div>
+                <div>
+                    <p>Average job price:
+                        <b>
+                            {% if customer.avg_job_price %}
+                            {{ customer.avg_job_price }}
+                                {% else %}
+                                0
+                                {% endif %}
+                        </b>
+                    </p>
+                </div>
+                <div>
+                    <p>Attempts to leave jobs before get blocked: <b>{{ customer.attempts_to_leave_before_get_blocked }}</b></p>
+                </div>
+                <legend class="border-bottom mb-3">{{ legend }}</legend>
+                <div>
+                    <p>
+                    E-mail: {{ customer.email }}
+                        </p>
+                </div>
+                <div>
+                    <p>
+                    Organisation name: {{ customer.organisation_name }}
+                        </p>
                 </div>
                 {% if g.user.role == 'admin' %}
 
@@ -44,6 +84,9 @@
                             </div>
                         </div>
                     </form>
+                {% else %}
+                    {% block sidebar_block %}
+                    {% endblock %}
                 {% endif %}
             </div>
         </div>

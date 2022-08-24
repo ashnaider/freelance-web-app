@@ -1,8 +1,8 @@
 -- drop trigger if exists CHECK_IF_CAN_START_JOB on freelancer;
 -- drop function if exists CHECK_IF_CAN_START_JOB_F();
 
-drop trigger if exists PREVENT_PROFILE_UPDATE_WHEN_BLOCKED on freelancer;
-drop function if exists PREVENT_PROFILE_UPDATE_WHEN_BLOCKED_F();
+drop trigger if exists PREVENT_FREELANCER_PROFILE_UPDATE_WHEN_BLOCKED on freelancer;
+drop function if exists PREVENT_FREELANCER_PROFILE_UPDATE_WHEN_BLOCKED_F();
 
 drop trigger if exists BLOCK_UNBLOCK_FREELANCER on freelancer;
 drop function if exists BLOCK_UNBLOCK_FREELANCER_F();
@@ -155,12 +155,12 @@ CREATE OR REPLACE FUNCTION BLOCK_UNBLOCK_FREELANCER_F() RETURNS TRIGGER
     LANGUAGE PLPGSQL
 AS $$
     BEGIN
-        if old.is_blocked = false and new.is_blocked = true then
+        if new.is_blocked = true then
             --- Blocking freelancer ---
             perform delete_new_applications_of_freelancer(new.id);
         end if;
 
-        if old.is_blocked = false and new.is_blocked = false then
+        if new.is_blocked = false then
             --- Unblocking freelancer ---
             new.unfinished_jobs_count = 0;
         end if;
@@ -175,7 +175,7 @@ CREATE TRIGGER BLOCK_UNBLOCK_FREELANCER
     EXECUTE PROCEDURE BLOCK_UNBLOCK_FREELANCER_F();
 
 
-CREATE OR REPLACE FUNCTION PREVENT_PROFILE_UPDATE_WHEN_BLOCKED_F() RETURNS TRIGGER
+CREATE OR REPLACE FUNCTION PREVENT_FREELANCER_PROFILE_UPDATE_WHEN_BLOCKED_F() RETURNS TRIGGER
     LANGUAGE PLPGSQL
 AS $$
     BEGIN
@@ -192,10 +192,10 @@ AS $$
     END
 $$;
 
-CREATE TRIGGER PREVENT_PROFILE_UPDATE_WHEN_BLOCKED
+CREATE TRIGGER PREVENT_FREELANCER_PROFILE_UPDATE_WHEN_BLOCKED
     BEFORE UPDATE OR INSERT ON freelancer
     FOR EACH ROW
-    EXECUTE PROCEDURE PREVENT_PROFILE_UPDATE_WHEN_BLOCKED_F();
+    EXECUTE PROCEDURE PREVENT_FREELANCER_PROFILE_UPDATE_WHEN_BLOCKED_F();
 
 
 

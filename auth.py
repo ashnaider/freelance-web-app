@@ -42,29 +42,18 @@ def register():
 
         try:
             g.cursor.execute(
-                "INSERT INTO users (email, passwd, role) VALUES (%s, %s, %s) RETURNING users.id",
-                (email, hashed_password, role),
+                "select * from register_user(email_p := %s, passwd_p := %s, role_p := %s, first_name_p := %s, last_name_p := %s);",
+                (email, hashed_password, role, first_name, last_name),
             )
             g.db_conn.commit()
             new_user_id = g.cursor.fetchone()[0]
 
-        except get_db_conn().IntegrityError:
+        except Exception as e:
             error = "Something went wrong during inserting new user to users table"
-            flash(error)
+            flash(error + str(e))
         else:
-            try:
-                print("new user id: ", new_user_id)
-                g.cursor.execute(
-                    SQL("INSERT INTO {} (user_id, first_name, last_name) VALUES (%s, %s, %s)".format(role)),
-                    (new_user_id, first_name, last_name)
-                    )
-                g.db_conn.commit()
-            except Exception as e:
-                error = "Something went wrong during inserting to role table"
-                print("exception: ", e)
-            else:
-                flash('Your account has been created! You are now able to log in', 'success')
-                return redirect(url_for("auth.login"))
+            flash('Your account has been created! You are now able to log in', 'success')
+            return redirect(url_for("auth.login"))
 
     return render_template('register.html', form=form)
 

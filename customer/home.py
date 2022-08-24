@@ -8,6 +8,10 @@ from jobs import *
 
 from utils import *
 
+
+SHOW_DB_CONNECTION = False
+
+
 customer = Blueprint(
     'customer', __name__,
     url_prefix='/customer',
@@ -147,6 +151,11 @@ def get_customer_unfinished_jobs(cust_id):
         """,
         (cust_id,)
     )
+
+    # if SHOW_DB_CONNECTION:
+    #     while True:
+    #         pass
+
     jobs = g.cursor.fetchall()
 
     for job in jobs:
@@ -384,6 +393,7 @@ def explore_job(job_id):
                                       'warning')
 
                     performer_data = get_job_performer_data(g.user['customer_id'], job_data['job_id'])
+                    job_data['job_status'] = 'unfinished'
                     return render_template('customer/job_in_progress.html',
                                            job=job_data,
                                            performer_data=performer_data)
@@ -393,8 +403,8 @@ def explore_job(job_id):
                     return render_template('customer/job_finished.html', job_template=finished_job_template)
 
                 elif status == 'unfinished':
-                    finished_job_template = get_unfinished_job_template(job_id)
-                    return render_template('customer/job_finished.html', job_template=finished_job_template)
+                    unfinished_job_template = get_unfinished_job_template(job_id)
+                    return render_template('customer/job_finished.html', job_template=unfinished_job_template)
             else:
                 return render_template('customer/foreign_job.html',
                                        job_template=render_template('job_template.html', job=job_data))
@@ -470,4 +480,11 @@ def concrete_application(app_id):
         return render_template('customer/app_concrete.html', app_template=app_template, job=job_data)
     return redirect('auth.login')
 
+
+@customer.route('/view_profile')
+def view_profile():
+    if g.user:
+        customer_template = get_customer_template(g.user['customer_id'])
+        return render_template('customer/view_profile.html', customer_template=customer_template)
+    return redirect(url_for('auth.login'))
 

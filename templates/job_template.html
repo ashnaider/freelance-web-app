@@ -22,6 +22,12 @@
             {% endif %}
         </div>
         <br>
+        {% if g.user %}
+            {% if g.user.role == 'admin' %}
+                <p>Author: {{ job.first_name|title }} {{ job.last_name|title }}</p>
+                <p>Email: <i>{{ job.email }}</i></p>
+                {% endif %}
+            {% endif %}
         <p class="article-content">{{ job.description }}</p>
     {% endif %}
 </div>

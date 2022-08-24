@@ -1,4 +1,4 @@
-DROP TRIGGER IF EXISTS CHECK_IF_CUSTOMER_CAN_CREATE_NEW_JOB_F ON new_job;
+DROP TRIGGER IF EXISTS CHECK_IF_CUSTOMER_CAN_CREATE_NEW_JOB ON new_job;
 DROP FUNCTION IF EXISTS CHECK_IF_CUSTOMER_CAN_CREATE_NEW_JOB_F();
 
 DROP TRIGGER IF EXISTS DELETE_NEW_APPLICATIONS_WHEN_JOB_BLOCKED ON new_job;
@@ -9,6 +9,9 @@ DROP FUNCTION IF EXISTS DELETE_APPLICATIONS_DEPENDING_ON_JOB_F();
 
 DROP TRIGGER IF EXISTS BLOCK_UNBLOCK_CUSTOMER on customer;
 DROP FUNCTION IF EXISTS BLOCK_UNBLOCK_CUSTOMER_F();
+
+DROP TRIGGER IF EXISTS PREVENT_CUSTOMER_PROFILE_UPDATE_WHEN_BLOCKED ON customer;
+DROP FUNCTION IF EXISTS PREVENT_CUSTOMER_PROFILE_UPDATE_WHEN_BLOCKED_F();
 
 DROP TRIGGER IF EXISTS BLOCK_CUSTOMER_WHEN_MANY_UNFINISHED_JOBS on customer;
 DROP FUNCTION IF EXISTS BLOCK_CUSTOMER_WHEN_MANY_UNFINISHED_JOBS_F();
@@ -76,7 +79,7 @@ AS $$
             update new_job set is_blocked = false where customer_id = new.id;
         end if;
 
-        if old.is_blocked = false and new.is_blocked = true then
+        if new.is_blocked = true then
             --- blocking ---
             update new_job set is_blocked = true where customer_id = new.id and status = 'new';
         end if;
@@ -89,6 +92,28 @@ CREATE TRIGGER BLOCK_UNBLOCK_CUSTOMER
     BEFORE UPDATE ON customer
     FOR EACH ROW
     EXECUTE PROCEDURE BLOCK_UNBLOCK_CUSTOMER_F();
+
+
+CREATE OR REPLACE FUNCTION PREVENT_CUSTOMER_PROFILE_UPDATE_WHEN_BLOCKED_F() RETURNS TRIGGER
+    LANGUAGE PLPGSQL
+AS $$
+    BEGIN
+        if new.is_blocked then
+            if old.first_name <> new.first_name or
+               old.last_name <> new.last_name or
+               old.organisation_name <> new.organisation_name then
+                raise exception 'Unable to update profile, because freelancer is blocked!';
+            end if;
+        end if;
+
+        return new;
+    END
+$$;
+
+CREATE TRIGGER PREVENT_CUSTOMER_PROFILE_UPDATE_WHEN_BLOCKED
+    BEFORE UPDATE OR INSERT ON customer
+    FOR EACH ROW
+    EXECUTE PROCEDURE PREVENT_CUSTOMER_PROFILE_UPDATE_WHEN_BLOCKED_F();
 
 
 CREATE OR REPLACE FUNCTION DELETE_APPLICATIONS_DEPENDING_ON_JOB_F() RETURNS TRIGGER
@@ -140,7 +165,7 @@ AS $$
     END
 $$;
 
-CREATE TRIGGER CHECK_IF_CUSTOMER_CAN_CREATE_NEW_JOB_F
+CREATE TRIGGER CHECK_IF_CUSTOMER_CAN_CREATE_NEW_JOB
     BEFORE INSERT ON new_job
     FOR EACH ROW
     EXECUTE PROCEDURE CHECK_IF_CUSTOMER_CAN_CREATE_NEW_JOB_F();

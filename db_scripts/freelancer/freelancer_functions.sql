@@ -89,24 +89,9 @@ $$
 BEGIN
         select into job_id_freelancer_working_on job_id_working_on from freelancer where id = fr_id;
     return query
-        select j.id,
-               j.header_,
-               j.description,
-               j.status,
-               j.posted,
-               j.accepted,
-               j.started,
-               j.finished,
-               j.price,
-               j.is_hourly_rate,
-               a.id,
-               a.description,
-               a.price,
-               c.id,
-               c.first_name,
-               c.last_name,
-               u.email,
-               c.is_blocked
+        select j.id, j.header_, j.description, j.status, j.posted, j.accepted,
+               j.started, j.finished, j.price, j.is_hourly_rate, a.id, a.description, a.price,
+               c.id, c.first_name, c.last_name, u.email, c.is_blocked
         from new_job as j
         inner join application a on j.application_id = a.id
         inner join customer c on j.customer_id = c.id
@@ -354,8 +339,8 @@ create type freelancer_private_info as ( id integer,
                                        active_applications_count integer,
                                        unfinished_jobs_count integer,
                                        finished_jobs_count integer,
-                                       total_money_earned numeric,
-                                       avg_app_price numeric);
+                                       total_money_earned integer,
+                                       avg_app_price integer);
 
 
 create or replace function get_freelancers_private_info()
@@ -395,7 +380,9 @@ as
 $$
     begin
         return query
-        select * from get_freelancers_private_info() where is_blocked = false;
+        select * from get_freelancers_private_info()
+        where is_blocked = false
+        order by finished_jobs_count desc;
     end;
 $$ language plpgsql;
 
@@ -406,7 +393,9 @@ as
 $$
     begin
         return query
-        select * from get_freelancers_private_info() where is_blocked = true;
+        select * from get_freelancers_private_info()
+        where is_blocked = true
+        order by unfinished_jobs_count desc ;
     end;
 $$ language plpgsql;
 
@@ -472,30 +461,40 @@ $$ language plpgsql;
 
 
 create or replace function count_freelancer_total_money_earned(fr_id_p integer)
-returns numeric
+returns integer
 as
 $$
     declare
-        total_money integer;
+        money_earned_projects integer;
+        money_earned_by_hours integer;
     begin
-        select into total_money sum(app_price::numeric)::numeric from get_freelancer_finished_jobs(fr_id_p);
-        return total_money;
+        select into money_earned_projects sum(app_price)::numeric
+        from get_freelancer_finished_jobs(fr_id_p)
+        where is_hourly_rate = false;
+
+        select into money_earned_by_hours sum(calculate_hourly_rate_project_total_price(job_id))
+        from get_freelancer_finished_jobs(fr_id_p)
+        where is_hourly_rate = true;
+
+        return money_earned_projects + money_earned_by_hours;
     end;
 $$ language plpgsql;
 
 
 create or replace function count_freelancer_avg_app_price(fr_id_p integer)
-returns numeric
+returns integer
 as
 $$
     declare
         finished_avg integer;
         unfinished_avg integer;
     begin
-        select into finished_avg avg(app_price::numeric)::numeric from get_freelancer_finished_jobs(fr_id_p);
-        select into unfinished_avg avg(app_price::numeric)::numeric from get_freelancer_unfinished_jobs(fr_id_p);
+--         select into finished_avg avg(app_price::numeric)::numeric
+--         from get_freelancer_finished_jobs(fr_id_p) where is_hourly_rate = false;
+--
+--         return finished_avg;
 
-        return (finished_avg + unfinished_avg) / 2;
+        return count_freelancer_total_money_earned(fr_id_p) / count_freelancer_finished_jobs(fr_id_p);
     end;
 $$ language plpgsql;
 

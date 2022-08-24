@@ -4,6 +4,12 @@ drop function if exists CHECK_POSTED_NEW_JOB_F();
 drop trigger if exists CHECK_POSTED_NEW_JOB_ON_UPDATE on new_job;
 drop function if exists CHECK_POSTED_NEW_JOB_ON_UPDATE_F();
 
+drop trigger if exists CHECK_POSTED_APPLICATION on application;
+drop function if exists CHECK_POSTED_APPLICATION_F();
+
+drop trigger if exists CHECK_POSTED_APPLICATION_ON_UPDATE on application;
+drop function if exists CHECK_POSTED_APPLICATION_ON_UPDATE_F();
+
 drop function if exists GetAuthorOfMessage;
 drop table if exists technology_stack;
 drop table if exists technology;
@@ -44,20 +50,20 @@ create domain email_domain as varchar(150)
         value ~* '^[a-z0-9._%-]+@[a-z0-9._%-]+\.[a-z]{2,4}'
         );
 
-create domain password_domain as varchar(50)
-    check (
-        value ~ '^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])[a-zA-Z0-9]{8,}$'
-        );
+-- create domain password_domain as varchar(50)
+--     check (
+--         value ~ '^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])[a-zA-Z0-9]{8,}$'
+--         );
 
 create domain name_domain as varchar(50)
     check (
-        value ~ '^[a-z\-]{1,48}'
+        value ~ '^[a-z]{1,48}'
         );
 
-create domain login_domain as varchar(50)
-    check (
-        value ~ '[a-z0-9]{5,48}'
-        );
+-- create domain login_domain as varchar(50)
+--     check (
+--         value ~ '[a-z0-9]{5,48}'
+--         );
 
 
 create table users
@@ -75,16 +81,16 @@ values ('admin@gmail.com',
 
 create table freelancer
 (
-    id                    serial not null primary key,
-    user_id               int    not null references users (id) on delete cascade on update cascade,
-    first_name            name_domain,
-    last_name             name_domain,
+    id                    serial      not null primary key,
+    user_id               int         not null references users (id) on delete cascade on update cascade,
+    first_name            name_domain not null,
+    last_name             name_domain not null,
     resume_link           varchar(250),
     specialization        varchar(250),
-    unfinished_jobs_count integer default 0,
+    unfinished_jobs_count integer     not null default 0 check (unfinished_jobs_count >= 0),
     job_id_working_on     integer,
-    started_doing_job     boolean default false,
-    is_blocked            boolean default false,
+    started_doing_job     boolean              default false,
+    is_blocked            boolean     not null default false,
 
     unique (id, user_id)
 );
@@ -115,13 +121,13 @@ create table freelancer
 
 create table customer
 (
-    id                serial not null primary key,
-    user_id           int    not null references users (id) on delete cascade on update cascade,
-    first_name        name_domain,
-    last_name         name_domain,
-    organisation_name varchar(150),
-    unfinished_jobs_count integer default 0,
-    is_blocked        boolean default false,
+    id                    serial      not null primary key,
+    user_id               int         not null references users (id) on delete cascade on update cascade,
+    first_name            name_domain not null,
+    last_name             name_domain not null,
+    organisation_name     varchar(150),
+    unfinished_jobs_count integer     not null default 0 check (unfinished_jobs_count >= 0),
+    is_blocked            boolean     not null default false,
 
     unique (id, user_id)
 );
@@ -130,40 +136,39 @@ create table customer
 
 create table new_job
 (
-    id             serial       not null primary key,
-    customer_id    int          not null
+    id             serial         not null primary key,
+    customer_id    int            not null
         references customer (id)
             on delete restrict on update cascade,
 
-    posted         timestamp    not null default CURRENT_TIMESTAMP,
-    accepted       timestamp,
-    started        timestamp,
-    finished       timestamp,
+    posted         timestamp      not null default CURRENT_TIMESTAMP,
+    accepted       timestamp check (accepted > posted),
+    started        timestamp check (started > accepted),
+    finished       timestamp check (finished > started),
 -- 	deadline timestamp   not null check (deadline > CURRENT_TIMESTAMP),
-    header_        varchar(250) not null,
-    description    varchar(650) not null,
-    price          money        not null check (price > 0::money),
-    is_hourly_rate boolean               default false,
-    status         project_status        default 'new',
+    header_        varchar(250)   not null,
+    description    varchar(650)   not null,
+    price          money          not null check (price > 0::money),
+    is_hourly_rate boolean        not null default false,
+    status         project_status not null default 'new',
     application_id integer,
-    is_blocked     boolean               default false
+    is_blocked     boolean        not null default false
 );
 
 
 create table application
 (
-    id            serial       not null primary key,
-    date_time     timestamp    not null default CURRENT_TIMESTAMP,
--- 	deadline timestamp not null check (deadline > date_time),
-    price         money        not null,
-    description   varchar(450) not null,
-    status        application_status    default 'new',
+    id            serial             not null primary key,
+    date_time     timestamp          not null default CURRENT_TIMESTAMP,
+    price         money              not null check ( price > 0::money ),
+    description   varchar(450)       not null,
+    status        application_status not null default 'new',
 
-    freelancer_id int          not null
+    freelancer_id int                not null
         references freelancer (id)
             on delete restrict on update cascade,
 
-    job_id        int          not null
+    job_id        int                not null
         references new_job (id)
             on delete restrict on update cascade,
 
@@ -197,7 +202,7 @@ CREATE OR REPLACE FUNCTION CHECK_POSTED_NEW_JOB_ON_UPDATE_F() RETURNS TRIGGER
 AS
 $$
 BEGIN
-    if NEW.posted < OLD.posted then
+    if NEW.posted <> OLD.posted then
         raise EXCEPTION 'New job posted field must be greather of equal to time it was inserted!
                 Error while inserting new job with header %s', NEW.header_;
     end if;
@@ -211,6 +216,44 @@ CREATE TRIGGER CHECK_POSTED_NEW_JOB_ON_UPDATE
     FOR EACH ROW
 EXECUTE PROCEDURE CHECK_POSTED_NEW_JOB_ON_UPDATE_F();
 
+
+
+CREATE OR REPLACE FUNCTION CHECK_POSTED_APPLICATION_F() RETURNS TRIGGER
+    LANGUAGE PLPGSQL
+AS
+$$
+BEGIN
+    if NEW.date_time < CURRENT_TIMESTAMP then
+        raise EXCEPTION 'Application posted time must be greater than current time!';
+    end if;
+    return NEW;
+END
+$$;
+
+CREATE TRIGGER CHECK_POSTED_APPLICATION
+    BEFORE INSERT
+    ON application
+    FOR EACH ROW
+EXECUTE PROCEDURE CHECK_POSTED_APPLICATION_F();
+
+
+CREATE OR REPLACE FUNCTION CHECK_POSTED_APPLICATION_ON_UPDATE_F() RETURNS TRIGGER
+    LANGUAGE PLPGSQL
+AS
+$$
+BEGIN
+    if NEW.date_time <> OLD.date_time then
+        raise EXCEPTION E'You can\'t change application posted time';
+    end if;
+    return NEW;
+END
+$$;
+
+CREATE TRIGGER CHECK_POSTED_APPLICATION_ON_UPDATE
+    BEFORE UPDATE
+    ON application
+    FOR EACH ROW
+EXECUTE PROCEDURE CHECK_POSTED_APPLICATION_ON_UPDATE_F();
 
 --
 -- create type complaint_type as enum (

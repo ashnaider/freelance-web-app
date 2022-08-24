@@ -198,7 +198,8 @@ as $$
         select
                j.id, j.posted, j.accepted, j.started, j.finished,
                j.header_, j.description, j.price, j.is_hourly_rate, j.status,
-               a.id, a.description, a.price, a.status, f.id, f.first_name, f.last_name, uf.email,
+               a.id, a.description, calculate_hourly_rate_project_total_price(j.id)::float8::numeric::money,
+               a.status, f.id, f.first_name, f.last_name, uf.email,
                c.id, c.first_name, c.last_name, uc.email
         from new_job as j
         inner join application a on a.id = j.application_id

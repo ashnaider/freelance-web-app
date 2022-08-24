@@ -36,9 +36,13 @@
                     {% if g.user %}
                         {% if g.user['role'] == 'customer' %}
                             <a class="nav-item nav-link" href="{{ url_for('customer.create_job') }}">Add job</a>
+                            <a class="nav-item nav-link" href="{{ url_for('customer.view_profile') }}">View
+                                Profile</a>
                             <a class="nav-item nav-link" href="{{ url_for('customer.edit_profile') }}">Edit Profile</a>
                             <a class="nav-item nav-link" href="{{ url_for('auth.logout') }}">Logout</a>
                         {% elif g.user['role'] == 'freelancer' %}
+                            <a class="nav-item nav-link" href="{{ url_for('freelancer.view_profile') }}">View
+                                Profile</a>
                             <a class="nav-item nav-link" href="{{ url_for('freelancer.edit_profile') }}">Edit
                                 Profile</a>
                             <a class="nav-item nav-link" href="{{ url_for('auth.logout') }}">Logout</a>
@@ -72,19 +76,19 @@
             {% endblock %}
         </div>
         {% block sidebar_block %}
-            <div class="col-md-4">
-                <div class="content-section">
-                    <h3>Our Sidebar</h3>
-                    <p class='text-muted'>You can put any information here you'd like.
-                    <ul class="list-group">
-                        <li class="list-group-item list-group-item-light">Latest Posts</li>
-                        <li class="list-group-item list-group-item-light">Announcements</li>
-                        <li class="list-group-item list-group-item-light">Calendars</li>
-                        <li class="list-group-item list-group-item-light">etc</li>
-                    </ul>
-                    </p>
-                </div>
-            </div>
+{#            <div class="col-md-4">#}
+{#                <div class="content-section">#}
+{#                    <h3>Our Sidebar</h3>#}
+{#                    <p class='text-muted'>You can put any information here you'd like.#}
+{#                    <ul class="list-group">#}
+{#                        <li class="list-group-item list-group-item-light">Latest Posts</li>#}
+{#                        <li class="list-group-item list-group-item-light">Announcements</li>#}
+{#                        <li class="list-group-item list-group-item-light">Calendars</li>#}
+{#                        <li class="list-group-item list-group-item-light">etc</li>#}
+{#                    </ul>#}
+{#                    </p>#}
+{#                </div>#}
+{#            </div>#}
         {% endblock %}
     </div>
 </main>

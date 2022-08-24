@@ -51,6 +51,7 @@ drop function if exists get_active_customers_private_info();
 drop function if exists get_customer_private_info(cust_id_p integer);
 drop function if exists get_customers_private_info();
 drop function if exists count_customer_attempts_to_leave(cust_id_p integer);
+drop function if exists calculate_hourly_rate_project_total_price(finished_job_id integer);
 drop function if exists count_customer_total_money_spent(cust_id_p integer);
 drop function if exists count_customer_avg_job_price(cust_id_p integer);
 drop function if exists count_customer_unfinished_jobs(cust_id_p integer);
@@ -156,7 +157,8 @@ $$
     begin
         return query
         select * from get_customer_jobs_with_app_and_users(cust_id_p)
-        where job_status = 'accepted' or job_status = 'in progress';
+        where job_status = 'accepted' or job_status = 'in progress'
+        order by job_accepted;
     end;
 $$ language plpgsql;
 
@@ -167,7 +169,8 @@ $$
     begin
         return query
         select * from get_customer_jobs_with_app_and_users(cust_id_p)
-        where job_status = 'done';
+        where job_status = 'done'
+        order by job_finished;
     end;
 $$ language plpgsql;
 
@@ -178,7 +181,8 @@ $$
     begin
         return query
         select * from get_customer_jobs_with_app_and_users(cust_id_p)
-        where job_status = 'unfinished';
+        where job_status = 'unfinished'
+        order by job_accepted;
     end;
 $$ language plpgsql;
 
@@ -494,28 +498,92 @@ $$
 $$ language plpgsql;
 
 
-create or replace function count_customer_total_money_spent(cust_id_p integer)
-returns numeric
+create or replace function calculate_hourly_rate_project_total_price(finished_job_id integer)
+returns integer
 as
 $$
     declare
-        money_spent integer;
+        app_price integer;
+        is_hourly_rate_t boolean;
+        job_finished_t boolean;
+        job_duration_in_hours_t integer;
+        final_price integer;
     begin
-        select into money_spent sum(app_price)::numeric from get_customer_done_jobs(cust_id_p);
-        return money_spent;
+        --- Check if job done ---
+        select into job_finished_t (status = 'done') from new_job where id = finished_job_id;
+        if job_finished_t = false then
+            return 0;
+        end if;
+
+        --- Get application price ---
+        select into app_price app.price::numeric from application as app
+            inner join new_job nj on app.id = nj.application_id where nj.id = finished_job_id;
+
+        --- Check if job is hourly rate ---
+        select into is_hourly_rate_t is_hourly_rate from new_job where id = finished_job_id;
+        if is_hourly_rate_t = false then
+            return app_price;
+        end if;
+
+        -- Count job duration in hours ---
+        select into job_duration_in_hours_t (abs(extract(epoch from new_job.finished - new_job.started)/3600))
+        from new_job where id = finished_job_id;
+
+        --- Count job working hours ---
+        select into job_duration_in_hours_t (job_duration_in_hours_t / 24 * 8 + job_duration_in_hours_t % 24 * 8);
+
+        --- Calculating final job price ---
+        select into final_price (job_duration_in_hours_t * app_price::numeric);
+
+        if final_price = 0 then
+            return app_price;
+        end if;
+
+        return final_price;
+    end;
+$$ language plpgsql;
+
+
+create or replace function count_customer_total_money_spent(cust_id_p integer)
+returns integer
+as
+$$
+    declare
+        money_spent_projects integer;
+        money_spent_by_hours integer;
+    begin
+        select into money_spent_projects sum(app_price)::numeric
+        from get_customer_done_jobs(cust_id_p)
+        where is_hourly_rate = false;
+
+        select into money_spent_by_hours sum(calculate_hourly_rate_project_total_price(job_id))
+        from get_customer_done_jobs(cust_id_p)
+        where is_hourly_rate = true;
+
+        return money_spent_projects + money_spent_by_hours;
     end;
 $$ language plpgsql;
 
 
 create or replace function count_customer_avg_job_price(cust_id_p integer)
-returns numeric
+returns integer
 as
 $$
     declare
-        avg_price integer;
+        avg_project_price integer;
+        avg_per_hour_price integer;
     begin
-        select into avg_price AVG(price::numeric)::numeric from get_customer_jobs(cust_id_p);
-        return avg_price;
+--         select into avg_project_price avg(app_price::numeric)::numeric
+--         from get_customer_done_jobs(cust_id_p)
+--         where is_hourly_rate = false;
+--
+--         select into avg_per_hour_price avg(calculate_hourly_rate_project_total_price(job_id))::numeric
+--         from get_customer_done_jobs(cust_id_p)
+--         where is_hourly_rate = true;
+--
+--         return (avg_project_price + avg_per_hour_price) / 2;
+
+        return count_customer_total_money_spent(cust_id_p) / count_customer_finished_jobs(cust_id_p);
     end;
 $$ language plpgsql;
 
@@ -548,11 +616,11 @@ create type customer_private_info as ( id integer,
                                        is_blocked boolean,
                                        attempts_to_leave_before_get_blocked integer,
                                        new_jobs_count integer,
-                                       in_progress_job_count integer,
+                                       in_progress_jobs_count integer,
                                        unfinished_jobs_count integer,
                                        finished_jobs_count integer,
-                                       total_money_spent numeric,
-                                       avg_job_price numeric);
+                                       total_money_spent integer,
+                                       avg_job_price integer);
 
 
 create or replace function get_customers_private_info()
@@ -591,7 +659,9 @@ as
 $$
     begin
         return query
-        select * from get_customers_private_info() where is_blocked = false;
+        select * from get_customers_private_info()
+        where is_blocked = false
+        order by finished_jobs_count desc ;
     end;
 $$ language plpgsql;
 
@@ -603,7 +673,9 @@ as
 $$
     begin
         return query
-        select * from get_customers_private_info() where is_blocked = true;
+        select * from get_customers_private_info()
+        where is_blocked = true
+        order by unfinished_jobs_count desc ;
     end;
 $$ language plpgsql;
 

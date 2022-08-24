@@ -10,6 +10,8 @@ from db import *
 from utils import *
 
 
+SHOW_DB_CONN = True
+
 jobs = Blueprint('jobs', __name__,
                  url_prefix='/jobs',
                  template_folder='templates')
@@ -140,6 +142,7 @@ def get_customers_data():
         select * from get_customers_private_info();
         """
     )
+
     customers_data = g.cursor.fetchall()
     return customers_data
 
@@ -151,6 +154,11 @@ def get_customer_data(cust_id):
         """,
         (cust_id,)
     )
+
+    if SHOW_DB_CONN:
+        while True:
+            pass
+
     customer = g.cursor.fetchone()
     return customer
 
@@ -161,6 +169,11 @@ def get_active_customers_data():
         select * from get_active_customers_private_info();
         """
     )
+
+    if SHOW_DB_CONN:
+        while True:
+            pass
+
     customers_data = g.cursor.fetchall()
     return customers_data
 
@@ -212,6 +225,11 @@ def get_freelancer_data(fr_id):
         """,
         (fr_id,)
     )
+
+    if SHOW_DB_CONN:
+        while True:
+            pass
+
     freelancer = g.cursor.fetchone()
     return freelancer
 

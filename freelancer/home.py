@@ -6,6 +6,10 @@ from jobs import *
 
 from utils import *
 
+
+SHOW_DB_CONNECTION = False
+
+
 freelancer = Blueprint(
     'freelancer',
     __name__,
@@ -265,8 +269,11 @@ def get_curr_job_in_progress():
                     print(str(e))
                     flash(crop_psql_error(str(e)), 'danger')
                 else:
-                    flash(f"You leaved this job. You can leave {attempts_to_leave_left[0]} times before get blocked!",
-                          'warning')
+                    if attempts_to_leave_left[0] == 0:
+                        flash('You are blocked now!', 'danger')
+                    else:
+                        flash(f"You leaved this job. You can leave {attempts_to_leave_left[0]} times before get blocked!",
+                              'warning')
                     curr_job['job_status'] = 'unfinished'
                     return render_template('freelancer/job_in_progress.html', curr_job=curr_job)
 
@@ -283,6 +290,11 @@ def get_freelancer_unfinished_jobs(fr_id):
         """,
         (fr_id,)
     )
+
+    # if SHOW_DB_CONNECTION:
+    #     while True:
+    #         pass
+
     unfinished_jobs = g.cursor.fetchall()
 
     for job in unfinished_jobs:
@@ -336,4 +348,13 @@ def explore_finished_job(job_id):
     if g.user:
         finished_job_template = get_finished_job_template(job_id)
         return render_template('freelancer/job_finished.html', job_template=finished_job_template)
+    return redirect(url_for('auth.login'))
+
+
+@freelancer.route('/view_profile')
+def view_profile():
+    if g.user:
+        freelancer_template = get_freelancer_template(g.user['freelancer_id'])
+        return render_template('freelancer/view_profile.html', freelancer_template=freelancer_template)
+
     return redirect(url_for('auth.login'))
